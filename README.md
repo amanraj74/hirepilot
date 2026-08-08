@@ -10,7 +10,7 @@
 
 HirePilot is a production-grade Applicant Tracking System where recruiters post jobs, candidates upload resumes, and **deterministic AI** parses the resume, scores the match against the job, explains strengths and gaps in plain language, and routes the candidate through a 7-stage pipeline on a draggable Kanban board. Every screen is keyboard-accessible, dark-mode-safe, and built to be operated by a real recruiter under deadline pressure.
 
-**Live demo:** `https://hirepilot.vercel.app` — _to be deployed by Day 5 (see `BLUEPRINT.md` §13)_
+**Live demo:** `https://hirepilot.vercel.app` — _to be deployed by Day 5_
 
 ---
 
@@ -74,38 +74,38 @@ Every feature is built around a real recruiter workflow — there is no demo but
 
 ## Tech Stack
 
-| Layer                             | Choice                                          | License    | Notes                                                                                                                            |
-| --------------------------------- | ----------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **Frontend framework**            | Next.js 15 (App Router) + React 19              | MIT        | Single app, API routes serve as backend                                                                                          |
-| **Language**                      | TypeScript 5.6 (strict)                         | Apache 2   | `noUncheckedIndexedAccess`, `noImplicitOverride` on                                                                              |
-| **Styling**                       | Tailwind CSS 3.4 + shadcn/ui (Radix primitives) | MIT        | _Pragmatic deviation: blueprint called for v4; v3 keeps shadcn ecosystem stable for the sprint. Tracked in `PROJECT_STATUS.md`._ |
-| **Backend runtime**               | Node.js 20.11 LTS                               | –          | Server-side Route Handlers in Next.js                                                                                            |
-| **Database**                      | PostgreSQL 16                                   | PostgreSQL | Free on Railway                                                                                                                  |
-| **ORM**                           | Prisma 5                                        | Apache 2   | Migrations + type-safe queries                                                                                                   |
-| **Cache / sessions / SSE broker** | Redis 7                                         | BSD        | Free on Railway                                                                                                                  |
-| **Auth**                          | Auth.js v5 (NextAuth)                           | MIT        | Google OAuth + email/password + JWT in HTTP-only cookies                                                                         |
-| **2FA**                           | `otplib` + `qrcode`                             | MIT        | TOTP via QR code                                                                                                                 |
-| **Background jobs**               | `graphile-worker`                               | MIT        | Postgres-backed, no extra infra                                                                                                  |
-| **File storage**                  | Cloudinary                                      | MIT SDK    | 25 GB free tier                                                                                                                  |
-| **Email**                         | Resend                                          | MIT SDK    | 3000 emails/month free                                                                                                           |
-| **Email templates**               | React Email                                     | MIT        | Component-based templates                                                                                                        |
-| **PDF generation**                | `@react-pdf/renderer`                           | MIT        | Server-side rendering                                                                                                            |
-| **PDF parsing**                   | `pdf-parse` (PDF) + `mammoth` (DOCX)            | MIT / BSD  | Resume → raw text                                                                                                                |
-| **Fuzzy matching**                | `fuse.js`                                       | Apache 2   | Skill extraction against taxonomy                                                                                                |
-| **NLP utilities**                 | `natural`                                       | MIT        | TF-IDF for feedback summarization                                                                                                |
-| **Forms**                         | React Hook Form + Zod                           | MIT        | Shared validation schemas                                                                                                        |
-| **Drag-and-drop**                 | `@dnd-kit`                                      | MIT        | Accessible Kanban                                                                                                                |
-| **Charts**                        | Recharts                                        | MIT        | Dashboard widgets                                                                                                                |
-| **Code editor (assessments)**     | Monaco Editor                                   | MIT        | Lazy-loaded only on assessment route                                                                                             |
-| **Calendar (.ics)**               | `ics`                                           | MIT        | Interview invite attachments                                                                                                     |
-| **Command palette**               | `cmdk`                                          | MIT        | ⌘K navigation                                                                                                                    |
-| **Unit tests**                    | Vitest                                          | MIT        | Fast TS tests                                                                                                                    |
-| **E2E tests**                     | Playwright                                      | Apache 2   | 4 critical user flows                                                                                                            |
-| **Linting**                       | ESLint 8 + Prettier 3                           | MIT        | + Husky pre-commit                                                                                                               |
-| **Monorepo tooling**              | pnpm 9 workspaces + Turborepo                   | MIT        | –                                                                                                                                |
-| **CI**                            | GitHub Actions                                  | –          | Lint + typecheck + test + build                                                                                                  |
-| **Hosting (web)**                 | Vercel (Hobby free tier)                        | –          | Auto-deploy on push to `main`                                                                                                    |
-| **Hosting (DB + Redis)**          | Railway ($5/month free credit)                  | –          | Postgres + Redis                                                                                                                 |
+| Layer                             | Choice                                          | License    | Notes                                                                                                |
+| --------------------------------- | ----------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------- |
+| **Frontend framework**            | Next.js 15 (App Router) + React 19              | MIT        | Single app, API routes serve as backend                                                              |
+| **Language**                      | TypeScript 5.6 (strict)                         | Apache 2   | `noUncheckedIndexedAccess`, `noImplicitOverride` on                                                  |
+| **Styling**                       | Tailwind CSS 3.4 + shadcn/ui (Radix primitives) | MIT        | _Pragmatic deviation: blueprint called for v4; v3 keeps the shadcn ecosystem stable for the sprint._ |
+| **Backend runtime**               | Node.js 20.11 LTS                               | –          | Server-side Route Handlers in Next.js                                                                |
+| **Database**                      | PostgreSQL 16                                   | PostgreSQL | Free on Railway                                                                                      |
+| **ORM**                           | Prisma 5                                        | Apache 2   | Migrations + type-safe queries                                                                       |
+| **Cache / sessions / SSE broker** | Redis 7                                         | BSD        | Free on Railway                                                                                      |
+| **Auth**                          | Auth.js v5 (NextAuth)                           | MIT        | Google OAuth + email/password + JWT in HTTP-only cookies                                             |
+| **2FA**                           | `otplib` + `qrcode`                             | MIT        | TOTP via QR code                                                                                     |
+| **Background jobs**               | `graphile-worker`                               | MIT        | Postgres-backed, no extra infra                                                                      |
+| **File storage**                  | Cloudinary                                      | MIT SDK    | 25 GB free tier                                                                                      |
+| **Email**                         | Resend                                          | MIT SDK    | 3000 emails/month free                                                                               |
+| **Email templates**               | React Email                                     | MIT        | Component-based templates                                                                            |
+| **PDF generation**                | `@react-pdf/renderer`                           | MIT        | Server-side rendering                                                                                |
+| **PDF parsing**                   | `pdf-parse` (PDF) + `mammoth` (DOCX)            | MIT / BSD  | Resume → raw text                                                                                    |
+| **Fuzzy matching**                | `fuse.js`                                       | Apache 2   | Skill extraction against taxonomy                                                                    |
+| **NLP utilities**                 | `natural`                                       | MIT        | TF-IDF for feedback summarization                                                                    |
+| **Forms**                         | React Hook Form + Zod                           | MIT        | Shared validation schemas                                                                            |
+| **Drag-and-drop**                 | `@dnd-kit`                                      | MIT        | Accessible Kanban                                                                                    |
+| **Charts**                        | Recharts                                        | MIT        | Dashboard widgets                                                                                    |
+| **Code editor (assessments)**     | Monaco Editor                                   | MIT        | Lazy-loaded only on assessment route                                                                 |
+| **Calendar (.ics)**               | `ics`                                           | MIT        | Interview invite attachments                                                                         |
+| **Command palette**               | `cmdk`                                          | MIT        | ⌘K navigation                                                                                        |
+| **Unit tests**                    | Vitest                                          | MIT        | Fast TS tests                                                                                        |
+| **E2E tests**                     | Playwright                                      | Apache 2   | 4 critical user flows                                                                                |
+| **Linting**                       | ESLint 8 + Prettier 3                           | MIT        | + Husky pre-commit                                                                                   |
+| **Monorepo tooling**              | pnpm 9 workspaces + Turborepo                   | MIT        | –                                                                                                    |
+| **CI**                            | GitHub Actions                                  | –          | Lint + typecheck + test + build                                                                      |
+| **Hosting (web)**                 | Vercel (Hobby free tier)                        | –          | Auto-deploy on push to `main`                                                                        |
+| **Hosting (DB + Redis)**          | Railway ($5/month free credit)                  | –          | Postgres + Redis                                                                                     |
 
 **Total cost: $0/month.** Every service on a free tier, no credit card required.
 
@@ -307,7 +307,7 @@ Post-deploy verification checklist:
 | ------------------------ | ------------ | ------------------------------------------ |
 | Solo full-stack engineer | **Aman Raj** | [@amanraj74](https://github.com/amanraj74) |
 
-This project is a solo submission for DevFusion 4.O Round 3. All architecture, implementation, design decisions, testing, deployment, and documentation were produced by one engineer under a 6-day sprint. See [`PRODUCT.md`](./PRODUCT.md) for scope and [`BLUEPRINT.md`](./BLUEPRINT.md) for build details.
+This project is a solo submission for DevFusion 4.O Round 3. All architecture, implementation, design decisions, testing, deployment, and documentation were produced by one engineer under a 6-day sprint.
 
 ---
 
@@ -315,7 +315,7 @@ This project is a solo submission for DevFusion 4.O Round 3. All architecture, i
 
 We are honest about what's real, what's stubbed, and what's out of scope — per the hackathon's "be honest — judges appreciate transparency" line.
 
-### Scoped out of v1 (intentional, per `PRODUCT.md` §13)
+### Scoped out of v1 (intentional)
 
 - **WebSocket-powered live collaborative notes** — out of scope; SSE used for one-way notifications instead
 - **2FA setup UI** — schema hook reserved; UI not wired in v1
@@ -464,7 +464,7 @@ Coverage target: ≥ 80% overall, ≥ 90% on domain logic. CI runs on every PR.
 
 ## Deployment
 
-Detailed steps in [`BLUEPRINT.md` §13](./BLUEPRINT.md).
+Detailed steps below.
 
 **Web (Vercel):**
 
@@ -493,11 +493,11 @@ Detailed steps in [`BLUEPRINT.md` §13](./BLUEPRINT.md).
 
 ### Hackathon compliance
 
-This submission follows the DevFusion 4.O official rules. See [`BLUEPRINT.md` §18](./BLUEPRINT.md#18-hackathon-compliance).
+This submission follows the DevFusion 4.O official rules (see [Submission Requirements](#development-notes)).
 
 ### Engineering handbook
 
-All engineering conventions — commit discipline, code review checklist, testing standards, security rules, error handling, definition of done — are documented in [`AGENT.md`](./AGENT.md). Read it before contributing.
+All engineering conventions — commit discipline, code review checklist, testing standards, security rules, error handling, definition of done — are applied throughout this codebase. The full engineering handbook is maintained locally by the team.
 
 ### AI-assisted development disclosure
 
@@ -512,8 +512,6 @@ This codebase was developed with assistance from an AI pair-programmer. Per the 
 ### Known deviations from the original blueprint
 
 - **Tailwind v3** (not v4): v4 was the blueprint target but v3 is the well-documented stable path for `create-next-app` + shadcn/ui + a 6-day sprint. The brand tokens are wired and switchable; v4 upgrade is a Day-5 polish task.
-
-Tracked in [`PROJECT_STATUS.md`](./PROJECT_STATUS.md).
 
 ---
 

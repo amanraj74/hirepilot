@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+.next/
+dist/
+build/
+out/
+.turbo/
+*.tsbuildinfo
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+
+# Docker
+.docker-data/
+
+# Prisma
+apps/web/prisma/migrations/dev.db*
+
+# Generated
+packages/shared/src/generated/
+
+# Vercel
+.vercel/
+
+# Hackathon organizers' PDFs (do not commit)
+docs/hackathon-guidelines.pdf

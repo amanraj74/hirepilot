@@ -52,5 +52,29 @@ packages/shared/src/generated/
 # Vercel
 .vercel/
 
-# Hackathon organizers' PDFs (do not commit)
+# -------------------------------------------------------------------
+# Local-only docs (kept on disk for the team, NOT pushed to GitHub).
+# See README.md for the public-facing project documentation.
+# -------------------------------------------------------------------
+AGENT.md
+BLUEPRINT.md
+PRODUCT.md
+TODO.md
+PROJECT_STATUS.md
+CHANGELOG.md
+Makefile
+
+# Hackathon organizers' PDFs (do not redistribute)
+docs/ps-2.pdf
 docs/hackathon-guidelines.pdf
+
+# Internal READMEs (only README.md at repo root is public)
+docs/README.md
+infra/README.md
+apps/api/README.md
+apps/web/README.md
+packages/README.md
+packages/shared/README.md
+
+# ADRs are internal design records
+docs/adr/

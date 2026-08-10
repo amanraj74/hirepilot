@@ -47,14 +47,17 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email.toLowerCase() },
         });
 
-        if (!user || !user.passwordHash) return null;
+        // Always run bcrypt.compare — even against a dummy hash when the user
+        // doesn't exist — to avoid timing-based email enumeration.
+        const DUMMY_HASH = '$2b$12$abcdefghijklmnopqrstuOiYnVkxY9eF1lNpWmRxLGD8xkS4kPm7u';
+        const hashToCheck = user?.passwordHash ?? DUMMY_HASH;
+        const passwordOk = await bcrypt.compare(credentials.password, hashToCheck);
+
+        if (!user || !passwordOk) return null;
         if (user.status === 'SUSPENDED') return null;
 
-        const valid = await bcrypt.compare(credentials.password, user.passwordHash);
-        if (!valid) return null;
-
-        // Update last-login timestamp (best-effort, never throws)
-        prisma.user
+        // Update last-login timestamp (fire-and-forget; never blocks sign-in).
+        void prisma.user
           .update({ where: { id: user.id }, data: { lastLoginAt: new Date() } })
           .catch(() => {});
 

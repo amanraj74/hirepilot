@@ -1,4 +1,4 @@
-// NextAuth.js v4 catch-all route handler (App Router pattern).
+// NextAuth.js v4 catch-all route handler (App Router pattern, canonical).
 // Handles /api/auth/signin, /api/auth/signout, /api/auth/callback/*,
 // /api/auth/session, /api/auth/csrf, /api/auth/providers.
 

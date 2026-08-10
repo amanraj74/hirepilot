@@ -17,7 +17,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml}\" --ignore-path .gitignore",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yml,yaml}\" --ignore-path .gitignore",
     "clean": "turbo run clean && rm -rf node_modules .turbo",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "8.16.0",

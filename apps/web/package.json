@@ -32,8 +32,10 @@
     "next-auth": "4.24.11",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
+    "resend": "4.0.1",
     "tailwind-merge": "^3.6.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "@types/bcryptjs": "2.4.6",

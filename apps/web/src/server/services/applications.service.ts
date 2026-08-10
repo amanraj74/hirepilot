@@ -101,6 +101,117 @@ export async function listApplicationsForRecruiter(ctx: RecruiterCtx) {
 }
 
 // ---------------------------------------------------------------------------
+// Candidate-facing: apply to a job
+// ---------------------------------------------------------------------------
+
+export async function applyToJob(input: {
+  jobId: string;
+  candidateId: string;
+  candidateName: string | null;
+  candidateEmail: string;
+  coverLetter: string;
+}) {
+  const job = await prisma.job.findUnique({
+    where: { id: input.jobId },
+    select: { id: true, status: true, title: true, postedById: true, companyId: true },
+  });
+  if (!job) throw new ApplicationError(404, 'Job not found');
+  if (job.status !== 'OPEN') {
+    throw new ApplicationError(409, 'This job is not accepting new applications');
+  }
+
+  const existing = await prisma.application.findFirst({
+    where: { jobId: input.jobId, candidateId: input.candidateId, deletedAt: null },
+    select: { id: true, stage: true },
+  });
+  if (existing) {
+    throw new ApplicationError(
+      409,
+      `You already applied to this role — your application is in ${STAGE_LABEL[existing.stage as Stage]}`,
+    );
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const application = await tx.application.create({
+      data: {
+        jobId: input.jobId,
+        candidateId: input.candidateId,
+        stage: 'APPLIED',
+        coverLetter: input.coverLetter,
+        source: 'public_board',
+      },
+      select: { id: true, stage: true, appliedAt: true },
+    });
+
+    // In-app notification for the recruiter who posted the job.
+    await tx.notification.create({
+      data: {
+        userId: job.postedById,
+        type: 'NEW_APPLICATION',
+        title: 'New application',
+        message: `${input.candidateName ?? input.candidateEmail.split('@')[0]} applied for ${job.title}.`,
+        link: '/recruiter/pipeline',
+      },
+    });
+
+    // Audit log entry for the application creation.
+    await tx.auditLog.create({
+      data: {
+        actorId: input.candidateId,
+        action: 'application.created',
+        resource: 'Application',
+        resourceId: application.id,
+        newValue: { jobId: job.id, stage: 'APPLIED' } as Prisma.InputJsonValue,
+      },
+    });
+
+    return application;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Candidate-facing: list my own applications
+// ---------------------------------------------------------------------------
+
+export async function listMyApplications(candidateId: string) {
+  const apps = await prisma.application.findMany({
+    where: { candidateId, deletedAt: null },
+    orderBy: { appliedAt: 'desc' },
+    include: {
+      job: {
+        select: {
+          id: true,
+          title: true,
+          department: true,
+          location: true,
+          workMode: true,
+          employmentType: true,
+          status: true,
+          company: { select: { name: true, logoUrl: true } },
+        },
+      },
+    },
+  });
+
+  return apps.map((a) => ({
+    id: a.id,
+    stage: a.stage as Stage,
+    appliedAt: a.appliedAt,
+    updatedAt: a.updatedAt,
+    job: {
+      id: a.job.id,
+      title: a.job.title,
+      department: a.job.department,
+      location: a.job.location,
+      workMode: a.job.workMode,
+      employmentType: a.job.employmentType,
+      status: a.job.status,
+      company: a.job.company.name,
+    },
+  }));
+}
+
+// ---------------------------------------------------------------------------
 
 export async function moveApplicationToStage(
   applicationId: string,

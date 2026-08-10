@@ -1,62 +1,54 @@
-import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { auth } from '@/server/auth';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { signOutAction } from './actions';
-
-export const metadata: Metadata = {
-  title: 'Dashboard',
-};
-
-export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   const session = await auth();
-
   if (!session?.user) {
-    return null; // middleware would have redirected; this is defense in depth
+    redirect('/login');
   }
 
-  const { name, email, role } = session.user;
+  // Role-aware routing — every role lands on its own home.
+  const role = session.user.role;
+  if (role === 'RECRUITER') redirect('/recruiter/dashboard');
+  if (role === 'HIRING_MANAGER') redirect('/hiring-manager/dashboard');
+  if (role === 'INTERVIEWER') redirect('/interviewer/dashboard');
+  if (role === 'ADMIN') redirect('/admin/dashboard');
 
+  // Candidate landing — show their applications + matches.
+  return <CandidateHome />;
+}
+
+function CandidateHome() {
   return (
-    <div className="min-h-screen bg-background px-6 py-12">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Welcome, {name ?? 'there'}</h1>
-            <p className="text-muted-foreground">
-              {email} · role: <code className="text-xs">{role}</code>
-            </p>
-          </div>
-          <form action={signOutAction}>
-            <Button type="submit" variant="outline">
-              Sign out
-            </Button>
-          </form>
-        </div>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <header>
+        <h1 className="text-3xl font-bold tracking-tight">Welcome to HirePilot</h1>
+        <p className="mt-2 text-muted-foreground">
+          Browse open roles, track your applications, and let our deterministic AI show you where
+          you match best.
+        </p>
+      </header>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Day 0 foundation complete</CardTitle>
-            <CardDescription>
-              Monorepo, Next.js 15, Prisma schema (25 models), Auth.js, edge middleware, and
-              Postgres are wired up.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>Day 1 (auth flows, landing page, companies + jobs CRUD) is next.</p>
-            <p>Real role-specific dashboards will replace this placeholder once features ship.</p>
-            <p>
-              Public landing:{' '}
-              <Link href="/" className="text-primary hover:underline">
-                /
-              </Link>{' '}
-              · Sign out via the button above.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Link
+          href="/jobs"
+          className="rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/40 hover:shadow-md"
+        >
+          <h2 className="text-lg font-semibold">Browse jobs</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            See all open roles with filters for work mode, type, and experience level.
+          </p>
+        </Link>
+        <Link
+          href="/applications"
+          className="rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/40 hover:shadow-md"
+        >
+          <h2 className="text-lg font-semibold">My applications</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Track where each application stands in the pipeline.
+          </p>
+        </Link>
       </div>
     </div>
   );

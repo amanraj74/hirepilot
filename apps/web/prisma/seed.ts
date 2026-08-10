@@ -332,6 +332,130 @@ const JOBS = [
   },
 ];
 
+// --- Demo applications ---------------------------------------------------
+// Each candidate applies to multiple roles across stages, so the Kanban has
+// real data to show in the demo. Stages mirror the ApplicationStage enum.
+
+const CANDIDATES_FOR_APPS = ['arjun.candidate@test.dev', 'priya.candidate@test.dev'];
+
+const APPLICATIONS = [
+  // Arjun (Senior Full-Stack Engineer focus)
+  {
+    candidateEmail: 'arjun.candidate@test.dev',
+    companySlug: 'hirepilot-demo',
+    jobTitle: 'Senior Full-Stack Engineer',
+    stage: 'APPLIED' as const,
+    daysAgo: 1,
+  },
+  {
+    candidateEmail: 'arjun.candidate@test.dev',
+    companySlug: 'acme-corp',
+    jobTitle: 'Platform Engineer (Kubernetes)',
+    stage: 'RESUME_SCREENING' as const,
+    daysAgo: 4,
+  },
+  {
+    candidateEmail: 'arjun.candidate@test.dev',
+    companySlug: 'northwind-tech',
+    jobTitle: 'Senior Frontend Engineer (React)',
+    stage: 'SHORTLISTED' as const,
+    daysAgo: 6,
+  },
+  {
+    candidateEmail: 'arjun.candidate@test.dev',
+    companySlug: 'hirepilot-demo',
+    jobTitle: 'AI Engineer (NLP / Matching)',
+    stage: 'TECHNICAL_INTERVIEW' as const,
+    daysAgo: 10,
+  },
+  {
+    candidateEmail: 'arjun.candidate@test.dev',
+    companySlug: 'northwind-tech',
+    jobTitle: 'Data Engineer',
+    stage: 'HR_INTERVIEW' as const,
+    daysAgo: 12,
+  },
+  {
+    candidateEmail: 'arjun.candidate@test.dev',
+    companySlug: 'hirepilot-demo',
+    jobTitle: 'Product Designer',
+    stage: 'OFFER' as const,
+    daysAgo: 16,
+  },
+  {
+    candidateEmail: 'arjun.candidate@test.dev',
+    companySlug: 'acme-corp',
+    jobTitle: 'Junior Backend Engineer (New Grad)',
+    stage: 'REJECTED' as const,
+    daysAgo: 20,
+  },
+  // Priya
+  {
+    candidateEmail: 'priya.candidate@test.dev',
+    companySlug: 'acme-corp',
+    jobTitle: 'Senior Full-Stack Engineer (Equiv)',
+    stage: 'APPLIED' as const,
+    daysAgo: 1,
+  },
+  {
+    candidateEmail: 'priya.candidate@test.dev',
+    companySlug: 'northwind-tech',
+    jobTitle: 'Senior Frontend Engineer (React)',
+    stage: 'APPLIED' as const,
+    daysAgo: 2,
+  },
+  {
+    candidateEmail: 'priya.candidate@test.dev',
+    companySlug: 'hirepilot-demo',
+    jobTitle: 'AI Engineer (NLP / Matching)',
+    stage: 'RESUME_SCREENING' as const,
+    daysAgo: 5,
+  },
+  {
+    candidateEmail: 'priya.candidate@test.dev',
+    companySlug: 'acme-corp',
+    jobTitle: 'Platform Engineer (Kubernetes)',
+    stage: 'SHORTLISTED' as const,
+    daysAgo: 8,
+  },
+  {
+    candidateEmail: 'priya.candidate@test.dev',
+    companySlug: 'northwind-tech',
+    jobTitle: 'DevRel Engineer',
+    stage: 'TECHNICAL_INTERVIEW' as const,
+    daysAgo: 11,
+  },
+  {
+    candidateEmail: 'priya.candidate@test.dev',
+    companySlug: 'acme-corp',
+    jobTitle: 'Engineering Manager — Tooling',
+    stage: 'OFFER' as const,
+    daysAgo: 14,
+  },
+  {
+    candidateEmail: 'priya.candidate@test.dev',
+    companySlug: 'hirepilot-demo',
+    jobTitle: 'Product Designer',
+    stage: 'HIRED' as const,
+    daysAgo: 25,
+  },
+  // A couple extras for visual density
+  {
+    candidateEmail: 'arjun.candidate@test.dev',
+    companySlug: 'northwind-tech',
+    jobTitle: 'DevRel Engineer',
+    stage: 'APPLIED' as const,
+    daysAgo: 1,
+  },
+  {
+    candidateEmail: 'priya.candidate@test.dev',
+    companySlug: 'northwind-tech',
+    jobTitle: 'QA Engineer (Contract)',
+    stage: 'APPLIED' as const,
+    daysAgo: 2,
+  },
+];
+
 // --- Run -----------------------------------------------------------------
 
 async function main() {
@@ -392,6 +516,7 @@ async function main() {
 
   // Jobs
   const postedByByEmail = new Map<string, string>();
+  const jobsByTitle = new Map<string, string>();
   for (const j of JOBS) {
     if (!postedByByEmail.has(j.postedByEmail)) {
       const user = await prisma.user.findUniqueOrThrow({ where: { email: j.postedByEmail } });
@@ -424,7 +549,38 @@ async function main() {
         deadline: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 days
       },
     });
+    jobsByTitle.set(j.title, created.id);
     console.warn(`  • job   ${created.title}  @ ${j.companySlug}`);
+  }
+
+  // Applications (for Kanban demo data)
+  // First delete any existing applications tied to our seeded users/jobs.
+  await prisma.application.deleteMany({
+    where: {
+      candidate: { email: { in: CANDIDATES_FOR_APPS } },
+      jobId: { in: Array.from(jobsByTitle.values()) },
+    },
+  });
+
+  for (const app of APPLICATIONS) {
+    const candidate = await prisma.user.findUniqueOrThrow({ where: { email: app.candidateEmail } });
+    const jobId = jobsByTitle.get(app.jobTitle);
+    if (!jobId) continue;
+
+    const appliedAt = new Date(Date.now() - app.daysAgo * 24 * 60 * 60 * 1000);
+    await prisma.application.create({
+      data: {
+        jobId,
+        candidateId: candidate.id,
+        stage: app.stage,
+        appliedAt,
+        updatedAt: appliedAt,
+        // Set a deterministic cover letter
+        coverLetter: `Hi team,\n\nI'm excited to apply for the ${app.jobTitle} role. My background aligns well with what you're looking for, and I'd love to discuss how I can contribute.\n\nBest,\n${candidate.name}`,
+        source: 'public_board',
+      },
+    });
+    console.warn(`  • app   ${app.candidateEmail.split('@')[0]} -> ${app.jobTitle} (${app.stage})`);
   }
 
   console.warn(`\n✅ Done. Demo password for all accounts: ${DEMO_PASSWORD}`);

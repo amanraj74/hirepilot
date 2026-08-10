@@ -33,6 +33,7 @@ export default withAuth(
           pathname === '/about' ||
           pathname.startsWith('/api/auth') ||
           pathname.startsWith('/api/health') ||
+          pathname.startsWith('/api/jobs') || // public job board
           pathname.startsWith('/_next') ||
           pathname.startsWith('/api/public');
         if (isPublic) return true;

@@ -1,0 +1,221 @@
+{
+  "categories": {
+    "language": "Programming languages",
+    "framework": "Frameworks & libraries",
+    "runtime": "Runtimes & platforms",
+    "database": "Databases",
+    "datastore": "Data stores",
+    "cloud": "Cloud & infrastructure",
+    "devops": "DevOps & tooling",
+    "data": "Data & ML",
+    "frontend": "Frontend & design",
+    "soft": "Soft skills"
+  },
+  "skills": [
+    {
+      "name": "TypeScript",
+      "category": "language",
+      "aliases": ["ts", "typescriptlang"],
+      "weight": 1.0
+    },
+    {
+      "name": "JavaScript",
+      "category": "language",
+      "aliases": ["js", "es6", "es2015", "node-js"],
+      "weight": 1.0
+    },
+    { "name": "Python", "category": "language", "aliases": ["python3", "py"], "weight": 1.0 },
+    { "name": "Go", "category": "language", "aliases": ["golang"], "weight": 0.9 },
+    { "name": "Rust", "category": "language", "aliases": ["rustlang"], "weight": 0.9 },
+    {
+      "name": "Java",
+      "category": "language",
+      "aliases": ["java17", "java21", "jdk"],
+      "weight": 0.9
+    },
+    { "name": "Kotlin", "category": "language", "aliases": [], "weight": 0.8 },
+    { "name": "Swift", "category": "language", "aliases": ["swiftlang"], "weight": 0.8 },
+    { "name": "Next.js", "category": "framework", "aliases": ["nextjs", "next-js"], "weight": 1.0 },
+    { "name": "React", "category": "framework", "aliases": ["reactjs", "react.js"], "weight": 1.0 },
+    { "name": "Vue", "category": "framework", "aliases": ["vuejs", "vue3"], "weight": 0.8 },
+    { "name": "Svelte", "category": "framework", "aliases": ["sveltekit"], "weight": 0.7 },
+    { "name": "Angular", "category": "framework", "aliases": ["angularjs"], "weight": 0.8 },
+    {
+      "name": "Express",
+      "category": "framework",
+      "aliases": ["expressjs", "express-js"],
+      "weight": 0.7
+    },
+    { "name": "NestJS", "category": "framework", "aliases": ["nest-js"], "weight": 0.8 },
+    { "name": "FastAPI", "category": "framework", "aliases": ["fast-api"], "weight": 0.8 },
+    { "name": "Django", "category": "framework", "aliases": [], "weight": 0.7 },
+    {
+      "name": "Rails",
+      "category": "framework",
+      "aliases": ["ruby on rails", "ror"],
+      "weight": 0.7
+    },
+    {
+      "name": "Spring",
+      "category": "framework",
+      "aliases": ["springboot", "spring-boot"],
+      "weight": 0.8
+    },
+    { "name": "Django REST Framework", "category": "framework", "aliases": ["drf"], "weight": 0.7 },
+    { "name": "Hono", "category": "framework", "aliases": [], "weight": 0.6 },
+    { "name": "tRPC", "category": "framework", "aliases": [], "weight": 0.7 },
+
+    { "name": "Node.js", "category": "runtime", "aliases": ["nodejs", "node"], "weight": 1.0 },
+    { "name": "Deno", "category": "runtime", "aliases": [], "weight": 0.7 },
+    { "name": "Bun", "category": "runtime", "aliases": [], "weight": 0.7 },
+    {
+      "name": "Cloudflare Workers",
+      "category": "runtime",
+      "aliases": ["cloudflare"],
+      "weight": 0.7
+    },
+    { "name": "Vercel", "category": "runtime", "aliases": [], "weight": 0.7 },
+    { "name": "AWS Lambda", "category": "runtime", "aliases": ["lambda"], "weight": 0.7 },
+
+    {
+      "name": "PostgreSQL",
+      "category": "database",
+      "aliases": ["postgres", "psql"],
+      "weight": 1.0
+    },
+    { "name": "MySQL", "category": "database", "aliases": [], "weight": 0.8 },
+    { "name": "MongoDB", "category": "database", "aliases": ["mongo"], "weight": 0.9 },
+    { "name": "Redis", "category": "database", "aliases": [], "weight": 0.9 },
+    {
+      "name": "Elasticsearch",
+      "category": "database",
+      "aliases": ["elastic-search", "opensearch"],
+      "weight": 0.7
+    },
+    { "name": "DynamoDB", "category": "database", "aliases": ["dynamo"], "weight": 0.7 },
+    { "name": "Snowflake", "category": "datastore", "aliases": [], "weight": 0.8 },
+    {
+      "name": "BigQuery",
+      "category": "datastore",
+      "aliases": ["bq", "google-bigquery"],
+      "weight": 0.7
+    },
+    { "name": "S3", "category": "datastore", "aliases": ["aws-s3"], "weight": 0.7 },
+
+    { "name": "AWS", "category": "cloud", "aliases": ["amazon-web-services"], "weight": 0.9 },
+    {
+      "name": "GCP",
+      "category": "cloud",
+      "aliases": ["google-cloud", "google-cloud-platform"],
+      "weight": 0.8
+    },
+    { "name": "Azure", "category": "cloud", "aliases": ["microsoft-azure"], "weight": 0.8 },
+    { "name": "Kubernetes", "category": "cloud", "aliases": ["k8s", "kube"], "weight": 1.0 },
+    { "name": "Docker", "category": "cloud", "aliases": ["dockerfile"], "weight": 0.9 },
+    { "name": "Terraform", "category": "cloud", "aliases": ["tf"], "weight": 0.8 },
+    { "name": "Pulumi", "category": "cloud", "aliases": [], "weight": 0.6 },
+    { "name": "Ansible", "category": "cloud", "aliases": [], "weight": 0.6 },
+    { "name": "Linux", "category": "cloud", "aliases": [], "weight": 0.7 },
+    { "name": "Nginx", "category": "cloud", "aliases": [], "weight": 0.6 },
+    { "name": "Cloudflare", "category": "cloud", "aliases": [], "weight": 0.7 },
+
+    { "name": "Git", "category": "devops", "aliases": [], "weight": 0.8 },
+    { "name": "GitHub Actions", "category": "devops", "aliases": ["gha"], "weight": 0.7 },
+    { "name": "GitLab CI", "category": "devops", "aliases": [], "weight": 0.6 },
+    { "name": "CircleCI", "category": "devops", "aliases": [], "weight": 0.6 },
+    { "name": "Jenkins", "category": "devops", "aliases": [], "weight": 0.6 },
+    { "name": "Terraform Cloud", "category": "devops", "aliases": [], "weight": 0.6 },
+    { "name": "Datadog", "category": "devops", "aliases": [], "weight": 0.6 },
+    { "name": "Sentry", "category": "devops", "aliases": [], "weight": 0.6 },
+    { "name": "Grafana", "category": "devops", "aliases": [], "weight": 0.6 },
+    { "name": "Prometheus", "category": "devops", "aliases": [], "weight": 0.6 },
+
+    { "name": "PyTorch", "category": "data", "aliases": ["torch"], "weight": 0.8 },
+    { "name": "TensorFlow", "category": "data", "aliases": ["tf"], "weight": 0.8 },
+    { "name": "Hugging Face", "category": "data", "aliases": ["huggingface", "hf"], "weight": 0.7 },
+    { "name": "LangChain", "category": "data", "aliases": [], "weight": 0.7 },
+    { "name": "Pandas", "category": "data", "aliases": [], "weight": 0.7 },
+    { "name": "NumPy", "category": "data", "aliases": ["numpy"], "weight": 0.7 },
+    { "name": "Scikit-learn", "category": "data", "aliases": ["sklearn", "scikit"], "weight": 0.7 },
+    { "name": "Airflow", "category": "data", "aliases": ["apache-airflow"], "weight": 0.7 },
+    { "name": "dbt", "category": "data", "aliases": ["dbt-core"], "weight": 0.7 },
+    { "name": "Spark", "category": "data", "aliases": ["apache-spark", "pyspark"], "weight": 0.7 },
+    { "name": "Kafka", "category": "data", "aliases": ["apache-kafka"], "weight": 0.7 },
+    { "name": "Airflow", "category": "data", "aliases": [], "weight": 0.6 },
+    {
+      "name": "NLP",
+      "category": "data",
+      "aliases": ["natural-language-processing"],
+      "weight": 0.7
+    },
+    { "name": "Information Retrieval", "category": "data", "aliases": ["ir"], "weight": 0.6 },
+    {
+      "name": "Embeddings",
+      "category": "data",
+      "aliases": ["vector-embeddings", "embeddings"],
+      "weight": 0.6
+    },
+
+    {
+      "name": "Tailwind CSS",
+      "category": "frontend",
+      "aliases": ["tailwindcss", "tailwind"],
+      "weight": 0.7
+    },
+    {
+      "name": "CSS",
+      "category": "frontend",
+      "aliases": ["css3", "cascading-style-sheets"],
+      "weight": 0.6
+    },
+    { "name": "HTML", "category": "frontend", "aliases": ["html5"], "weight": 0.6 },
+    { "name": "Sass", "category": "frontend", "aliases": ["scss"], "weight": 0.5 },
+    { "name": "shadcn/ui", "category": "frontend", "aliases": ["shadcn"], "weight": 0.6 },
+    { "name": "Radix UI", "category": "frontend", "aliases": ["radix"], "weight": 0.6 },
+    { "name": "Figma", "category": "frontend", "aliases": [], "weight": 0.7 },
+    { "name": "Design Systems", "category": "frontend", "aliases": [], "weight": 0.6 },
+    { "name": "Accessibility", "category": "frontend", "aliases": ["a11y", "wcag"], "weight": 0.6 },
+    { "name": "Storybook", "category": "frontend", "aliases": [], "weight": 0.5 },
+
+    { "name": "REST APIs", "category": "framework", "aliases": ["rest", "restful"], "weight": 0.7 },
+    { "name": "GraphQL", "category": "framework", "aliases": [], "weight": 0.7 },
+    { "name": "gRPC", "category": "framework", "aliases": [], "weight": 0.6 },
+    {
+      "name": "WebSockets",
+      "category": "framework",
+      "aliases": ["ws", "socket.io"],
+      "weight": 0.6
+    },
+
+    {
+      "name": "Monorepo",
+      "category": "devops",
+      "aliases": ["monorepos", "turborepo"],
+      "weight": 0.5
+    },
+    { "name": "Prisma", "category": "database", "aliases": ["prismaorm"], "weight": 0.9 },
+    { "name": "Drizzle", "category": "database", "aliases": ["drizzle-orm"], "weight": 0.7 },
+    { "name": "TypeORM", "category": "database", "aliases": [], "weight": 0.6 },
+    { "name": "Drizzle ORM", "category": "database", "aliases": [], "weight": 0.6 },
+
+    {
+      "name": "CI/CD",
+      "category": "devops",
+      "aliases": ["cicd", "continuous-integration"],
+      "weight": 0.7
+    },
+    {
+      "name": "Testing",
+      "category": "soft",
+      "aliases": ["unit-testing", "integration-testing"],
+      "weight": 0.5
+    },
+    { "name": "Code Review", "category": "soft", "aliases": [], "weight": 0.4 },
+    { "name": "Mentoring", "category": "soft", "aliases": [], "weight": 0.4 },
+    { "name": "Leadership", "category": "soft", "aliases": ["tech-leadership"], "weight": 0.5 },
+    { "name": "Hiring", "category": "soft", "aliases": [], "weight": 0.4 },
+    { "name": "Public Speaking", "category": "soft", "aliases": [], "weight": 0.4 },
+    { "name": "Writing", "category": "soft", "aliases": ["technical-writing"], "weight": 0.4 },
+    { "name": "Communication", "category": "soft", "aliases": [], "weight": 0.4 }
+  ]
+}

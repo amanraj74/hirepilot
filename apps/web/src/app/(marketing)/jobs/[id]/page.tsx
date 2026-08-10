@@ -1,11 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getServerSession } from 'next-auth';
 import { ArrowLeft, Building2, Globe, MapPin, Wallet } from 'lucide-react';
 import { prisma } from '@/server/db';
+import { authOptions } from '@/server/auth/config';
+import { scoreMatch, type ParsedResumeLite } from '@/server/ai/match-scorer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { MatchCard } from '@/components/match/match-card';
 import {
   employmentTypeLabel,
   experienceLevelLabel,
@@ -57,6 +61,37 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   if (!job) notFound();
 
   const requirements = job.requirements?.split('\n').filter(Boolean) ?? [];
+
+  // If the viewer is signed in as a candidate with a parsed resume,
+  // compute the match score on-the-fly so they see their fit before applying.
+  const session = await getServerSession(authOptions);
+  let matchResult: ReturnType<typeof scoreMatch> | null = null;
+  let hasResume = false;
+  if (session?.user && session.user.role === 'CANDIDATE') {
+    const profile = await prisma.candidateProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { skills: true, totalExperienceYears: true },
+    });
+    const latestResume = await prisma.resume.findFirst({
+      where: { candidateId: session.user.id },
+      orderBy: { version: 'desc' },
+      select: { parsedData: true },
+    });
+    const parsedFields = (
+      latestResume?.parsedData as {
+        fields?: { degreeLevel?: 'PHD' | 'MASTERS' | 'BACHELORS' | 'DIPLOMA' | 'NONE' };
+      } | null
+    )?.fields;
+    if (profile && profile.skills.length > 0) {
+      hasResume = true;
+      const resumeLite: ParsedResumeLite = {
+        skills: profile.skills.map((s) => ({ name: s, weight: 0.6 })),
+        yearsExperience: profile.totalExperienceYears ?? 0,
+        degreeLevel: parsedFields?.degreeLevel ?? 'NONE',
+      };
+      matchResult = scoreMatch(resumeLite, job);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 md:py-14">
@@ -227,6 +262,10 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               </CardContent>
             )}
           </Card>
+
+          <div className="mt-4">
+            <MatchCard result={matchResult} hasResume={hasResume} />
+          </div>
         </aside>
       </div>
     </div>

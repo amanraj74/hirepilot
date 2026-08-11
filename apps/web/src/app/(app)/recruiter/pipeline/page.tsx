@@ -1,18 +1,25 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { KanbanSquare } from 'lucide-react';
-import { auth } from '@/server/auth';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/server/auth/config';
 import { listApplicationsForRecruiter } from '@/server/services/applications.service';
-import { KanbanBoard, type KanbanApplication } from '@/components/kanban/kanban-board';
-import { moveStageAction } from './_actions';
+import {
+  KanbanBoardWithOffers,
+  type KanbanApplication,
+} from '@/components/kanban/kanban-with-offers';
+import { moveStageAction } from './actions';
 
 export const metadata: Metadata = {
   title: 'Pipeline · HirePilot',
 };
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export default async function PipelinePage() {
-  const session = await auth();
-  if (!session?.user) redirect('/login');
+  const session = await getServerSession(authOptions);
+  if (!session?.user) redirect('/login?callbackUrl=/recruiter/pipeline');
   if (
     session.user.role !== 'RECRUITER' &&
     session.user.role !== 'HIRING_MANAGER' &&
@@ -51,7 +58,7 @@ export default async function PipelinePage() {
           </p>
         </div>
       ) : (
-        <KanbanBoard
+        <KanbanBoardWithOffers
           initialApplications={applications}
           moveAction={async (id, stage) => {
             'use server';

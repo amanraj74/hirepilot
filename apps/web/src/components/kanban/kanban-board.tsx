@@ -38,9 +38,11 @@ export type KanbanApplication = {
 export function KanbanBoard({
   initialApplications,
   moveAction,
+  renderCardExtra,
 }: {
   initialApplications: KanbanApplication[];
   moveAction: (id: string, stage: Stage) => Promise<{ ok: boolean; error?: string }>;
+  renderCardExtra?: (app: KanbanApplication) => React.ReactNode;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -121,7 +123,7 @@ export function KanbanBoard({
             {STAGE_ORDER.map((stage) => (
               <KanbanColumn key={stage} stage={stage} count={byStage[stage].length}>
                 {byStage[stage].map((app) => (
-                  <DraggableCard key={app.id} app={app} />
+                  <DraggableCard key={app.id} app={app} renderExtra={renderCardExtra} />
                 ))}
                 {byStage[stage].length === 0 && (
                   <div className="rounded-md border border-dashed border-border bg-muted/20 px-3 py-6 text-center text-xs text-muted-foreground">
@@ -176,7 +178,13 @@ function KanbanColumn({
   );
 }
 
-function DraggableCard({ app }: { app: KanbanApplication }) {
+function DraggableCard({
+  app,
+  renderExtra,
+}: {
+  app: KanbanApplication;
+  renderExtra?: (app: KanbanApplication) => React.ReactNode;
+}) {
   const { setNodeRef, attributes, listeners, transform, isDragging } = useDraggable({ id: app.id });
   return (
     <div
@@ -189,6 +197,15 @@ function DraggableCard({ app }: { app: KanbanApplication }) {
       className={cn(isDragging && 'invisible')}
     >
       <ApplicationCardContent app={app} />
+      {renderExtra?.(app) ? (
+        <div
+          className="mt-2"
+          // Stop drag when clicking the action area.
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          {renderExtra(app)}
+        </div>
+      ) : null}
     </div>
   );
 }

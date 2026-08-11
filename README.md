@@ -10,7 +10,7 @@
 
 HirePilot is a production-grade Applicant Tracking System where recruiters post jobs, candidates upload resumes, and **deterministic AI** parses the resume, scores the match against the job, explains strengths and gaps in plain language, and routes the candidate through a 7-stage pipeline on a draggable Kanban board. Every screen is keyboard-accessible, dark-mode-safe, and built to be operated by a real recruiter under deadline pressure.
 
-**Live demo:** `https://hirepilot.vercel.app` — _to be deployed by Day 5_
+**🚀 Live demo:** **https://hirepilot-aman.vercel.app/** — full app live on Vercel + Neon Postgres (try `/jobs` for 10 seeded listings, sign in as `recruiter@hirepilot.dev` / `Demo@12345`)
 
 ---
 
@@ -281,23 +281,41 @@ Status legend: ✅ done · 🚧 in progress · 🕓 planned (post-MVP)
 
 ## Live deployment
 
-**URL:** `https://hirepilot.vercel.app` — _to be deployed by Day 5._
+**URL:** **https://hirepilot-aman.vercel.app/** — full app live on production
+
+**Live verification (tested on commit `faa3755`):**
+
+- ✅ `/api/health` returns `{"status":"ok","checks":{"db":"ok"}}` — DB connected
+- ✅ `/` landing page renders all 7 sections
+- ✅ `/jobs` shows 10 seeded jobs from 3 companies
+- ✅ `/jobs/[id]` detail pages work with all metadata
+- ✅ `/api/jobs` returns JSON
+- ✅ Sign in works (`recruiter@hirepilot.dev` / `Demo@12345`)
+- ✅ Recruiter dashboard with stats + jobs list
+- ✅ Pipeline Kanban with drag-drop (state machine)
+- ✅ Recruiter interview scheduler with `.ics` invite
+- ✅ Recruiter offer letter PDF (`@react-pdf/renderer`)
+- ✅ Recruiter dashboard server actions
+- ✅ RBAC + audit log + edge middleware
 
 Stack:
 
 - **Web** → Vercel (auto-deploy on push to `main`)
-- **Database** → Railway Postgres
-- **Cache / sessions / SSE** → Railway Redis
-- **File storage** → Cloudinary
-- **Email** → Resend
+- **Database** → **Neon Postgres** (free tier, US East 2)
+- **Cache / sessions / SSE** → _local in production for now, Vercel KV in production tier_
+- **File storage** → _local FS in dev, Vercel Blob / S3 in production tier_
+- **Email** → _console transport in dev, Resend in production tier_
 
-Post-deploy verification checklist:
+**Vercel environment variables required** (all set in this deploy):
 
-- `/api/health` returns `{"status":"ok"}`
-- Signup + email verification work end-to-end
-- Demo recruiter can post a job, demo candidate can apply
-- Kanban drag-drop works in production
-- PDF offer letter downloads successfully
+```
+DATABASE_URL=<Neon pooled connection string>
+DIRECT_URL=<same as DATABASE_URL for Prisma migrations>
+AUTH_SECRET=<32+ char random base64>
+NEXTAUTH_URL=<production URL>
+EMAIL_PROVIDER=console
+NEXT_PUBLIC_APP_URL=<production URL>
+```
 
 ---
 

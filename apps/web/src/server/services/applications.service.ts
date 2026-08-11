@@ -190,6 +190,11 @@ export async function listMyApplications(candidateId: string) {
           company: { select: { name: true, logoUrl: true } },
         },
       },
+      offerLetters: {
+        where: { status: { notIn: ['REJECTED', 'EXPIRED', 'RESCINDED'] } },
+        orderBy: { sentAt: 'desc' },
+        take: 1,
+      },
     },
   });
 
@@ -208,6 +213,21 @@ export async function listMyApplications(candidateId: string) {
       status: a.job.status,
       company: a.job.company.name,
     },
+    offer: a.offerLetters[0]
+      ? {
+          id: a.offerLetters[0].id,
+          status: a.offerLetters[0].status,
+          salaryAmount: a.offerLetters[0].salaryAmount,
+          salaryCurrency: a.offerLetters[0].salaryCurrency,
+          joiningDate: a.offerLetters[0].joiningDate,
+          location: a.offerLetters[0].location,
+          benefits: a.offerLetters[0].benefits,
+          bodyMarkdown: a.offerLetters[0].bodyMarkdown,
+          pdfUrl: a.offerLetters[0].pdfUrl,
+          expiresAt: a.offerLetters[0].expiresAt,
+          sentAt: a.offerLetters[0].sentAt,
+        }
+      : null,
   }));
 }
 

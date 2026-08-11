@@ -1,0 +1,357 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "HirePilot API",
+    "version": "0.1.0",
+    "description": "HirePilot — AI-Powered Applicant Tracking System REST API. All authenticated endpoints require a NextAuth.js session cookie. The complete demo lives at https://hirepilot-aman.vercel.app/",
+    "contact": { "name": "HirePilot", "url": "https://hirepilot-aman.vercel.app" }
+  },
+  "servers": [
+    { "url": "https://hirepilot-aman.vercel.app", "description": "Production" },
+    { "url": "http://localhost:3000", "description": "Local dev" }
+  ],
+  "tags": [
+    { "name": "Auth", "description": "Authentication via NextAuth.js (/api/auth/*)" },
+    { "name": "Jobs", "description": "Public job board (read-only)" },
+    { "name": "Recruiter", "description": "Recruiter operations (CRUD, pipeline, offers)" },
+    { "name": "Candidate", "description": "Candidate accept/decline operations" },
+    { "name": "Interviewer", "description": "Interviewer feedback endpoints" },
+    { "name": "Resume", "description": "Resume upload + parse" }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": ["Jobs"],
+        "summary": "Health check (verifies DB connectivity)",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/api/jobs": {
+      "get": {
+        "tags": ["Jobs"],
+        "summary": "List public jobs (paginated, filterable)",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "location", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "workMode",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["REMOTE", "HYBRID", "ONSITE"] }
+          },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 20, "maximum": 50 }
+          }
+        ],
+        "responses": { "200": { "description": "Paginated list" } }
+      }
+    },
+    "/api/jobs/{id}": {
+      "get": {
+        "tags": ["Jobs"],
+        "summary": "Get job by id",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Job" }, "404": { "description": "Not found" } }
+      }
+    },
+    "/api/jobs/{id}/apply": {
+      "post": {
+        "tags": ["Candidate"],
+        "summary": "Apply to a job (candidate only)",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "201": { "description": "Created" },
+          "401": { "description": "Unauthorized" },
+          "409": { "description": "Already applied" }
+        }
+      }
+    },
+    "/api/recruiter/jobs": {
+      "get": {
+        "tags": ["Recruiter"],
+        "summary": "List this recruiter's jobs",
+        "security": [{ "sessionCookie": [] }],
+        "responses": { "200": { "description": "List" } }
+      },
+      "post": {
+        "tags": ["Recruiter"],
+        "summary": "Create a job",
+        "security": [{ "sessionCookie": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object" } } }
+        },
+        "responses": {
+          "201": { "description": "Created" },
+          "422": { "description": "Validation error" }
+        }
+      }
+    },
+    "/api/recruiter/jobs/{id}": {
+      "get": {
+        "tags": ["Recruiter"],
+        "summary": "Get job",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Job" }, "404": { "description": "Not found" } }
+      },
+      "patch": {
+        "tags": ["Recruiter"],
+        "summary": "Update job",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "OK" }, "404": { "description": "Not found" } }
+      },
+      "delete": {
+        "tags": ["Recruiter"],
+        "summary": "Soft-delete job",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Soft-deleted" } }
+      }
+    },
+    "/api/recruiter/jobs/{id}/duplicate": {
+      "post": {
+        "tags": ["Recruiter"],
+        "summary": "Duplicate a job (creates DRAFT with '(Copy)' appended)",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "201": { "description": "Created" } }
+      }
+    },
+    "/api/recruiter/applications": {
+      "get": {
+        "tags": ["Recruiter"],
+        "summary": "List recruiter's applications (pipeline data)",
+        "security": [{ "sessionCookie": [] }],
+        "responses": { "200": { "description": "List" } }
+      }
+    },
+    "/api/recruiter/applications/{id}/stage": {
+      "patch": {
+        "tags": ["Recruiter"],
+        "summary": "Move application to a new pipeline stage (state machine)",
+        "description": "Valid transitions: APPLIED -> RESUME_SCREENING -> SHORTLISTED -> TECHNICAL_INTERVIEW -> HR_INTERVIEW -> OFFER -> HIRED. REJECTED is allowed from any non-terminal. Cannot move from HIRED or REJECTED.",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["stage"],
+                "properties": {
+                  "stage": {
+                    "type": "string",
+                    "enum": [
+                      "APPLIED",
+                      "RESUME_SCREENING",
+                      "SHORTLISTED",
+                      "TECHNICAL_INTERVIEW",
+                      "HR_INTERVIEW",
+                      "OFFER",
+                      "HIRED",
+                      "REJECTED"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Stage updated, audit log entry created" },
+          "403": { "description": "Not your application" },
+          "409": { "description": "Terminal stage" },
+          "422": { "description": "Invalid transition" }
+        }
+      }
+    },
+    "/api/recruiter/interviews": {
+      "get": {
+        "tags": ["Recruiter"],
+        "summary": "List interviews",
+        "security": [{ "sessionCookie": [] }],
+        "responses": { "200": { "description": "List" } }
+      }
+    },
+    "/api/recruiter/offers": {
+      "post": {
+        "tags": ["Recruiter"],
+        "summary": "Generate + send an offer letter (PDF + email)",
+        "security": [{ "sessionCookie": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["applicationId", "salaryAmount", "joiningDate"],
+                "properties": {
+                  "applicationId": { "type": "string" },
+                  "salaryAmount": { "type": "integer" },
+                  "salaryCurrency": { "type": "string" },
+                  "joiningDate": { "type": "string", "format": "date" },
+                  "expiresAt": { "type": "string", "format": "date" },
+                  "location": { "type": "string" },
+                  "benefits": { "type": "array", "items": { "type": "string" } },
+                  "bodyMarkdown": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Offer letter generated, PDF stored, email sent" },
+          "404": { "description": "Not found" },
+          "409": { "description": "Application not in valid state" }
+        }
+      }
+    },
+    "/api/candidate/offers/{id}/accept": {
+      "post": {
+        "tags": ["Candidate"],
+        "summary": "Accept offer (application -> HIRED)",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Accepted" },
+          "403": { "description": "Not your offer" },
+          "409": { "description": "Not in SENT state or expired" }
+        }
+      }
+    },
+    "/api/candidate/offers/{id}/reject": {
+      "post": {
+        "tags": ["Candidate"],
+        "summary": "Decline offer (application -> REJECTED)",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Rejected" },
+          "403": { "description": "Not your offer" }
+        }
+      }
+    },
+    "/api/interviewer/assignments": {
+      "get": {
+        "tags": ["Interviewer"],
+        "summary": "My assigned interviews",
+        "security": [{ "sessionCookie": [] }],
+        "responses": { "200": { "description": "List" } }
+      }
+    },
+    "/api/interviewer/feedback/{interviewId}": {
+      "post": {
+        "tags": ["Interviewer"],
+        "summary": "Submit interview feedback scorecard",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          { "name": "interviewId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "interviewId",
+                  "technicalSkills",
+                  "communication",
+                  "problemSolving",
+                  "teamwork",
+                  "leadership",
+                  "overallRating",
+                  "recommendation"
+                ],
+                "properties": {
+                  "interviewId": { "type": "string" },
+                  "technicalSkills": { "type": "integer", "minimum": 1, "maximum": 5 },
+                  "communication": { "type": "integer", "minimum": 1, "maximum": 5 },
+                  "problemSolving": { "type": "integer", "minimum": 1, "maximum": 5 },
+                  "teamwork": { "type": "integer", "minimum": 1, "maximum": 5 },
+                  "leadership": { "type": "integer", "minimum": 1, "maximum": 5 },
+                  "overallRating": { "type": "integer", "minimum": 1, "maximum": 5 },
+                  "recommendation": {
+                    "type": "string",
+                    "enum": ["STRONG_HIRE", "HIRE", "NO_HIRE", "STRONG_NO_HIRE"]
+                  },
+                  "comments": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Feedback submitted" },
+          "403": { "description": "Not a participant" },
+          "409": { "description": "Already submitted" }
+        }
+      }
+    },
+    "/api/me/resume": {
+      "get": {
+        "tags": ["Resume"],
+        "summary": "Get current resume + profile summary",
+        "security": [{ "sessionCookie": [] }],
+        "responses": { "200": { "description": "Resume data" } }
+      },
+      "post": {
+        "tags": ["Resume"],
+        "summary": "Upload + parse resume (PDF/DOCX/TXT, max 10MB)",
+        "security": [{ "sessionCookie": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": { "file": { "type": "string", "format": "binary" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Resume parsed, profile auto-populated" },
+          "400": { "description": "Missing file" },
+          "413": { "description": "File too large" },
+          "415": { "description": "Unsupported file type" },
+          "422": { "description": "Could not parse the resume" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "next-auth.session-token",
+        "description": "NextAuth.js session cookie"
+      }
+    }
+  }
+}

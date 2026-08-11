@@ -16,6 +16,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getRecruiterDashboardStats, listRecruiterJobs } from '@/server/services/jobs.service';
 import { JobStatusBadge } from '@/components/job/job-status-badge';
 import { employmentTypeLabel, formatRelativeTime, workModeLabel } from '@/lib/utils/format';
+import {
+  PipelineFunnelChart,
+  PipelineStageDistribution,
+  ConversionRateChart,
+  JobStatusSummary,
+} from '@/components/dashboard/charts';
 
 export const dynamic = 'force-dynamic';
 
@@ -87,6 +93,18 @@ export default async function RecruiterDashboardPage() {
             value={stats.hired}
             sub={`${stats.offersExtended} offers extended`}
           />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-xl font-semibold tracking-tight">Pipeline analytics</h2>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <PipelineFunnelChart byStage={stats.appsByStage} />
+          <PipelineStageDistribution byStage={stats.appsByStage} />
+        </div>
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <ConversionRateChart byStage={stats.appsByStage} />
+          <JobStatusSummary byStatus={stats.jobsByStatus} />
         </div>
       </section>
 

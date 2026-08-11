@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>HirePilot ER Diagram</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+  <style>body { font-family: sans-serif; padding: 24px; }</style>
+</head>
+<body>
+  <h1>HirePilot ER Diagram</h1>
+  <p><em>Auto-generated from Prisma schema. 25 models, 15 enums, full relations.</em></p>
+  <div class="mermaid">
+```mermaid
+erDiagram
+
+    Role {
+        string CANDIDATE
+        string RECRUITER
+        string HIRING_MANAGER
+        string INTERVIEWER
+        string ADMIN
+    }
+
+    UserStatus {
+        string ACTIVE
+        string SUSPENDED
+        string PENDING_VERIFICATION
+    }
+
+    WorkMode {
+        string REMOTE
+        string HYBRID
+        string ONSITE
+    }
+
+    EmploymentType {
+        string FULL_TIME
+        string PART_TIME
+        string CONTRACT
+        string INTERN
+    }
+
+    ExperienceLevel {
+        string ENTRY
+        string MID
+        string SENIOR
+        string LEAD
+        string EXECUTIVE
+    }
+
+    JobStatus {
+        string DRAFT
+        string OPEN
+        string PAUSED
+        string CLOSED
+        string FILLED
+    }
+
+    ApplicationStage {
+        string APPLIED
+        string RESUME_SCREENING
+        string SHORTLISTED
+        string TECHNICAL_INTERVIEW
+        string HR_INTERVIEW
+        string OFFER
+        string HIRED
+        string REJECTED
+    }
+
+    InterviewType {
+        string PHONE
+        string TECHNICAL
+        string HR
+        string PANEL
+        string ONSITE
+    }
+
+    InterviewPlatform {
+        string ZOOM
+        string GOOGLE_MEET
+        string TEAMS
+        string OTHER
+    }
+
+    InterviewStatus {
+        string SCHEDULED
+        string COMPLETED
+        string CANCELLED
+        string NO_SHOW
+    }
+
+    AssessmentType {
+        string MCQ
+        string CODE
+        string SQL
+        string DEBUG
+    }
+
+    AssessmentStatus {
+        string DRAFT
+        string ACTIVE
+        string ARCHIVED
+    }
+
+    AssessmentAttemptStatus {
+        string IN_PROGRESS
+        string SUBMITTED
+        string GRADED
+        string EXPIRED
+    }
+
+    OfferLetterStatus {
+        string DRAFT
+        string SENT
+        string ACCEPTED
+        string REJECTED
+        string EXPIRED
+        string RESCINDED
+    }
+
+    NotificationType {
+        string NEW_APPLICATION
+        string STAGE_CHANGED
+        string INTERVIEW_SCHEDULED
+        string ASSESSMENT_ASSIGNED
+        string OFFER_RECEIVED
+        string OFFER_ACCEPTED
+        string OFFER_REJECTED
+        string ASSESSMENT_GRADED
+        string PROFILE_COMPLETE
+    }
+
+    Account {
+        id (pk) id "PK"
+        string userId
+        string type
+        string provider
+        string providerAccountId
+        string refresh_token "NULL"
+        string access_token "NULL"
+        int expires_at "NULL"
+        string token_type "NULL"
+        string scope "NULL"
+        string session_state "NULL"
+        User user
+    }
+
+    Session {
+        id (pk) id "PK"
+        string sessionToken
+        string userId
+        datetime expires
+        User user
+    }
+
+    VerificationToken {
+        string token
+        datetime expires
+    }
+
+    User {
+        id (pk) id "PK"
+        string email
+        datetime emailVerified "NULL"
+        string name "NULL"
+        string image "NULL"
+        string passwordHash "NULL"
+        role role
+        userstatus status
+        boolean twoFactorEnabled
+        string companyId "NULL"
+        datetime lastLoginAt "NULL"
+        datetime createdAt
+        datetime updatedAt
+        array<account> accounts
+        array<session> sessions
+        company company "NULL"
+        candidateprofile candidateProfile "NULL"
+        recruiterprofile recruiterProfile "NULL"
+        twofactorauth twoFactor "NULL"
+        array<devicesession> deviceSessions
+        array<notification> notifications
+        array<auditlog> auditLogs
+        array<job> postedJobs
+        array<application> candidateApplications
+        array<interviewparticipant> interviewerParticipants
+        array<interviewfeedback> interviewerFeedbacks
+        array<assessment> assessmentsCreated
+        array<assessmentattempt> assessmentAttempts
+        array<offerletter> offeredLetters
+    }
+
+    Company {
+        id (pk) id "PK"
+        string name
+        string slug
+        string website "NULL"
+        string industry "NULL"
+        string size "NULL"
+        string description "NULL"
+        string logoUrl "NULL"
+        json socialLinks "NULL"
+        json officeLocations "NULL"
+        datetime createdAt
+        datetime updatedAt
+        array<user> users
+        array<job> jobs
+    }
+
+    CandidateProfile {
+        id (pk) id "PK"
+        string userId
+        string avatarUrl "NULL"
+        string phone "NULL"
+        string location "NULL"
+        string headline "NULL"
+        string summary "NULL"
+        json education "NULL"
+        json experience "NULL"
+        array<string> skills
+        json certifications "NULL"
+        string portfolioUrl "NULL"
+        string githubUrl "NULL"
+        string linkedinUrl "NULL"
+        string resumeUrl "NULL"
+        string resumeFileId "NULL"
+        datetime resumeUpdatedAt "NULL"
+        float totalExperienceYears "NULL"
+        int profileCompletionPct
+        datetime deletedAt "NULL"
+        datetime createdAt
+        datetime updatedAt
+        User user
+        array<resume> resumes
+        array<application> applications
+    }
+
+    RecruiterProfile {
+        id (pk) id "PK"
+        string userId
+        string title "NULL"
+        string department "NULL"
+        string seniority "NULL"
+        datetime createdAt
+        datetime updatedAt
+        User user
+    }
+
+    TwoFactorAuth {
+        id (pk) id "PK"
+        string userId
+        string secret
+        boolean enabled
+        array<string> backupCodes
+        datetime createdAt
+        datetime updatedAt
+        User user
+    }
+
+    DeviceSession {
+        id (pk) id "PK"
+        string userId
+        string deviceName "NULL"
+        string browser "NULL"
+        string os "NULL"
+        string ip "NULL"
+        datetime lastActiveAt
+        datetime revokedAt "NULL"
+        datetime createdAt
+        User user
+    }
+
+    Job {
+        id (pk) id "PK"
+        string companyId
+        string postedById
+        string title
+        string department "NULL"
+        string location "NULL"
+        workmode workMode
+        int salaryMin "NULL"
+        int salaryMax "NULL"
+        string salaryCurrency "NULL"
+        employmenttype employmentType
+        experiencelevel experienceLevel
+        int experienceYears "NULL"
+        array<string> skillsRequired
+        string description
+        string requirements "NULL"
+        string benefits "NULL"
+        jobstatus status
+        datetime publishedAt "NULL"
+        datetime deadline "NULL"
+        datetime deletedAt "NULL"
+        datetime createdAt
+        datetime updatedAt
+        Company company
+        User postedBy
+        array<application> applications
+        array<resumeanalysis> resumeAnalyses
+        array<assessmentassignment> assessmentAssignments
+    }
+
+    Application {
+        id (pk) id "PK"
+        string jobId
+        string candidateId
+        applicationstage stage
+        json stageHistory "NULL"
+        string coverLetter "NULL"
+        string currentResumeId "NULL"
+        int matchScore "NULL"
+        string source "NULL"
+        datetime appliedAt
+        datetime decidedAt "NULL"
+        datetime deletedAt "NULL"
+        datetime createdAt
+        datetime updatedAt
+        Job job
+        User candidate
+        array<interview> interviews
+        array<assessmentattempt> assessmentAttempts
+        array<offerletter> offerLetters
+        candidateprofile CandidateProfile "NULL"
+        string candidateProfileId "NULL"
+    }
+
+    Resume {
+        id (pk) id "PK"
+        string candidateId
+        string fileUrl
+        string publicId "NULL"
+        string fileType
+        int fileSizeBytes
+        string originalName
+        string rawText "NULL"
+        json parsedData "NULL"
+        string parseStatus
+        string parseError "NULL"
+        int version
+        datetime uploadedAt
+        CandidateProfile candidate
+        array<resumeanalysis> analyses
+    }
+
+    ResumeAnalysis {
+        id (pk) id "PK"
+        string resumeId
+        string jobId "NULL"
+        int matchScore
+        array<string> strongSkills
+        array<string> missingSkills
+        array<string> weakAreas
+        array<string> recommendations
+        json breakdown "NULL"
+        datetime computedAt
+        Resume resume
+        job job "NULL"
+    }
+
+    Interview {
+        id (pk) id "PK"
+        string applicationId
+        interviewtype type
+        datetime scheduledAt
+        int durationMins
+        interviewplatform platform
+        string meetingLink "NULL"
+        string location "NULL"
+        interviewstatus status
+        datetime cancelledAt "NULL"
+        string cancellationReason "NULL"
+        string notes "NULL"
+        datetime createdAt
+        datetime updatedAt
+        Application application
+        array<interviewparticipant> participants
+        array<interviewfeedback> feedback
+        calendarevent calendar "NULL"
+    }
+
+    InterviewParticipant {
+        string interviewId
+        string userId
+        string role
+        datetime createdAt
+        Interview interview
+        User user
+    }
+
+    InterviewFeedback {
+        id (pk) id "PK"
+        string interviewId
+        string interviewerId
+        int technicalSkills
+        int communication
+        int problemSolving
+        int teamwork
+        int leadership
+        int overallRating
+        string comments "NULL"
+        string recommendation "NULL"
+        datetime submittedAt
+        Interview interview
+        User interviewer
+    }
+
+    CalendarEvent {
+        id (pk) id "PK"
+        string interviewId
+        string icsContent
+        string googleEventId "NULL"
+        string outlookEventId "NULL"
+        datetime createdAt
+        Interview interview
+    }
+
+    Assessment {
+        id (pk) id "PK"
+        string title
+        string description "NULL"
+        assessmenttype type
+        int durationMinutes
+        int passingScore
+        assessmentstatus status
+        string companyId "NULL"
+        string createdById
+        datetime createdAt
+        datetime updatedAt
+        array<assessmentquestion> questions
+        array<assessmentattempt> attempts
+        array<assessmentassignment> assignments
+        User createdBy
+    }
+
+    AssessmentQuestion {
+        id (pk) id "PK"
+        string assessmentId
+        assessmenttype type
+        string prompt
+        json options "NULL"
+        string solution "NULL"
+        string language "NULL"
+        string expectedOutput "NULL"
+        string starterCode "NULL"
+        int points
+        int orderIndex
+        int timeLimitSecs "NULL"
+        datetime createdAt
+        Assessment assessment
+    }
+
+    AssessmentAttempt {
+        id (pk) id "PK"
+        string assessmentId
+        string applicationId "NULL"
+        string candidateId
+        json answers "NULL"
+        int score "NULL"
+        int maxScore "NULL"
+        int tabSwitchCount
+        boolean autoSubmitted
+        assessmentattemptstatus status
+        datetime startedAt
+        datetime submittedAt "NULL"
+        datetime gradedAt "NULL"
+        Assessment assessment
+        application application "NULL"
+        User candidate
+    }
+
+    AssessmentAssignment {
+        id (pk) id "PK"
+        string assessmentId
+        string jobId
+        datetime assignedAt
+        datetime dueAt "NULL"
+        datetime sentEmailAt "NULL"
+        datetime createdAt
+        Assessment assessment
+        Job job
+    }
+
+    OfferLetter {
+        id (pk) id "PK"
+        string applicationId
+        string candidateId
+        string companyId
+        string candidateNameSnapshot
+        string roleSnapshot
+        int salaryAmount
+        string salaryCurrency
+        datetime joiningDate
+        string location "NULL"
+        array<string> benefits
+        string templateUsed "NULL"
+        string bodyMarkdown
+        string pdfUrl "NULL"
+        offerletterstatus status
+        datetime sentAt "NULL"
+        datetime respondedAt "NULL"
+        datetime expiresAt "NULL"
+        datetime createdAt
+        datetime updatedAt
+        Application application
+        User candidate
+    }
+
+    Notification {
+        id (pk) id "PK"
+        string userId
+        notificationtype type
+        string title
+        string message
+        string link "NULL"
+        boolean read
+        datetime readAt "NULL"
+        json metadata "NULL"
+        datetime createdAt
+        User user
+    }
+
+    AuditLog {
+        id (pk) id "PK"
+        string actorId "NULL"
+        string action
+        string resource
+        string resourceId
+        json oldValue "NULL"
+        json newValue "NULL"
+        string ip "NULL"
+        string userAgent "NULL"
+        datetime createdAt
+        user actor "NULL"
+    }
+
+    Setting {
+        id (pk) id "PK"
+        string key
+        json value
+        string updatedById "NULL"
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    Account ||--|| User : "user"
+    Session ||--|| User : "user"
+    CandidateProfile ||--|| User : "user"
+    RecruiterProfile ||--|| User : "user"
+    TwoFactorAuth ||--|| User : "user"
+    DeviceSession ||--|| User : "user"
+    Job ||--|| Company : "company"
+    Application ||--|| Job : "job"
+    Resume ||--|| CandidateProfile : "candidate"
+    ResumeAnalysis ||--|| Resume : "resume"
+    Interview ||--|| Application : "application"
+    InterviewParticipant ||--|| Interview : "interview"
+    InterviewFeedback ||--|| Interview : "interview"
+    CalendarEvent ||--|| Interview : "interview"
+    Assessment ||--|| User : "createdBy"
+    AssessmentQuestion ||--|| Assessment : "assessment"
+    AssessmentAttempt ||--|| Assessment : "assessment"
+    AssessmentAssignment ||--|| Assessment : "assessment"
+    OfferLetter ||--|| Application : "application"
+    Notification ||--|| User : "user"
+```
+  </div>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'default' });</script>
+</body>
+</html>

@@ -306,5 +306,8 @@ export async function getRecruiterDashboardStats(ctx: RecruiterContext) {
     offersExtended: appsByStage.OFFER ?? 0,
     hired: appsByStage.HIRED ?? 0,
     rejected: appsByStage.REJECTED ?? 0,
+    // For chart-friendly data
+    appsByStage,
+    jobsByStatus,
   };
 }

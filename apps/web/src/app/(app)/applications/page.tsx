@@ -8,6 +8,7 @@ import { listMyApplications } from '@/server/services/applications.service';
 import { prisma } from '@/server/db';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { OfferCard } from '@/components/offer/offer-card';
 import { employmentTypeLabel, formatRelativeTime, workModeLabel } from '@/lib/utils/format';
 import { STAGE_LABEL } from '@/server/services/applications.service';
 
@@ -115,6 +116,27 @@ export default async function MyApplicationsPage({
                   </span>
                 </div>
               </Link>
+              {app.offer && (
+                <div className="mt-3">
+                  <OfferCard
+                    offer={{
+                      id: app.offer.id,
+                      status: app.offer.status,
+                      salaryAmount: app.offer.salaryAmount,
+                      salaryCurrency: app.offer.salaryCurrency,
+                      joiningDate: app.offer.joiningDate,
+                      location: app.offer.location,
+                      benefits: app.offer.benefits,
+                      bodyMarkdown: app.offer.bodyMarkdown,
+                      pdfUrl: app.offer.pdfUrl,
+                      expiresAt: app.offer.expiresAt,
+                      sentAt: app.offer.sentAt ?? '',
+                    }}
+                    companyName={app.job.company}
+                    jobTitle={app.job.title}
+                  />
+                </div>
+              )}
             </li>
           ))}
         </ul>

@@ -22,6 +22,10 @@ import {
   ConversionRateChart,
   JobStatusSummary,
 } from '@/components/dashboard/charts';
+import { TimeToHireWidget } from '@/components/dashboard/time-to-hire';
+import { InterviewSuccessWidget } from '@/components/dashboard/interview-success';
+import { CandidateSourceWidget } from '@/components/dashboard/candidate-source';
+import { RecruiterPerformanceWidget } from '@/components/dashboard/recruiter-performance';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,6 +109,14 @@ export default async function RecruiterDashboardPage() {
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <ConversionRateChart byStage={stats.appsByStage} />
           <JobStatusSummary byStatus={stats.jobsByStatus} />
+        </div>
+
+        <h2 className="mt-6 mb-3 text-xl font-semibold tracking-tight">Performance</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <TimeToHireWidget />
+          <InterviewSuccessWidget />
+          <CandidateSourceWidget />
+          <RecruiterPerformanceWidget />
         </div>
       </section>
 

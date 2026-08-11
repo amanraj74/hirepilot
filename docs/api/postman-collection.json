@@ -1,0 +1,375 @@
+{
+  "info": {
+    "name": "HirePilot API",
+    "_postman_id": "hirepilot-2026",
+    "description": "HirePilot REST API. Import into Postman: File > Import > Raw text, then paste the raw JSON of this file. The production base URL is https://hirepilot-aman.vercel.app/.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://hirepilot-aman.vercel.app", "type": "string" },
+    {
+      "key": "sessionCookie",
+      "value": "",
+      "type": "string",
+      "description": "Set after /api/auth/callback/credentials sign-in"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Get session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/session",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "session"]
+            }
+          }
+        },
+        {
+          "name": "Get providers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/providers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "providers"]
+            }
+          }
+        },
+        {
+          "name": "Get CSRF token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/csrf",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "csrf"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Jobs (public)",
+      "item": [
+        {
+          "name": "List public jobs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs?q=engineer&location=Remote&workMode=REMOTE&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs"],
+              "query": [
+                { "key": "q", "value": "engineer", "description": "Search query" },
+                { "key": "location", "value": "Remote" },
+                { "key": "workMode", "value": "REMOTE" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get job by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs", ":id"],
+              "variable": [{ "key": "id", "value": "replace-with-job-id" }]
+            }
+          }
+        },
+        {
+          "name": "Apply to a job (candidate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coverLetter\": \"I'm excited to apply for this role. My background aligns well with what you're looking for, and I'd love to discuss how I can contribute.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs/:id/apply",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs", ":id", "apply"],
+              "variable": [{ "key": "id", "value": "replace-with-job-id" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recruiter",
+      "item": [
+        {
+          "name": "List my jobs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/recruiter/jobs?status=OPEN",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recruiter", "jobs"],
+              "query": [{ "key": "status", "value": "OPEN" }]
+            }
+          }
+        },
+        {
+          "name": "Create a job",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Senior Full-Stack Engineer\",\n  \"department\": \"Engineering\",\n  \"location\": \"Remote\",\n  \"workMode\": \"REMOTE\",\n  \"employmentType\": \"FULL_TIME\",\n  \"experienceLevel\": \"SENIOR\",\n  \"experienceYears\": 5,\n  \"salaryMin\": 100000,\n  \"salaryMax\": 140000,\n  \"salaryCurrency\": \"USD\",\n  \"skillsRequired\": [\"TypeScript\", \"Next.js\", \"React\"],\n  \"description\": \"We are looking for a senior engineer...\",\n  \"publish\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/recruiter/jobs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recruiter", "jobs"]
+            }
+          }
+        },
+        {
+          "name": "Update a job",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"PAUSED\"\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/api/recruiter/jobs/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recruiter", "jobs", ":id"],
+              "variable": [{ "key": "id", "value": "replace-with-job-id" }]
+            }
+          }
+        },
+        {
+          "name": "Delete a job",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/recruiter/jobs/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recruiter", "jobs", ":id"],
+              "variable": [{ "key": "id", "value": "replace-with-job-id" }]
+            }
+          }
+        },
+        {
+          "name": "Duplicate a job",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/recruiter/jobs/:id/duplicate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recruiter", "jobs", ":id", "duplicate"],
+              "variable": [{ "key": "id", "value": "replace-with-job-id" }]
+            }
+          }
+        },
+        {
+          "name": "List my applications (pipeline data)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/recruiter/applications",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recruiter", "applications"]
+            }
+          }
+        },
+        {
+          "name": "Move application to a new stage",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"stage\": \"SHORTLISTED\"\n}" },
+            "url": {
+              "raw": "{{baseUrl}}/api/recruiter/applications/:id/stage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recruiter", "applications", ":id", "stage"],
+              "variable": [{ "key": "id", "value": "replace-with-application-id" }]
+            }
+          }
+        },
+        {
+          "name": "List my interviews",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/recruiter/interviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recruiter", "interviews"]
+            }
+          }
+        },
+        {
+          "name": "Send an offer letter (PDF + email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicationId\": \"replace-with-application-id\",\n  \"salaryAmount\": 120000,\n  \"salaryCurrency\": \"USD\",\n  \"joiningDate\": \"2026-10-01\",\n  \"location\": \"Remote\",\n  \"benefits\": [\"Remote-first\", \"Competitive equity\", \"30 days PTO\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/recruiter/offers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recruiter", "offers"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Candidate",
+      "item": [
+        {
+          "name": "Accept an offer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/candidate/offers/:id/accept",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "candidate", "offers", ":id", "accept"],
+              "variable": [{ "key": "id", "value": "replace-with-offer-id" }]
+            }
+          }
+        },
+        {
+          "name": "Decline an offer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/candidate/offers/:id/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "candidate", "offers", ":id", "reject"],
+              "variable": [{ "key": "id", "value": "replace-with-offer-id" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Interviewer",
+      "item": [
+        {
+          "name": "My assigned interviews",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/interviewer/assignments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "interviewer", "assignments"]
+            }
+          }
+        },
+        {
+          "name": "Submit interview feedback",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"interviewId\": \"replace-with-interview-id\",\n  \"technicalSkills\": 4,\n  \"communication\": 5,\n  \"problemSolving\": 4,\n  \"teamwork\": 4,\n  \"leadership\": 3,\n  \"overallRating\": 4,\n  \"recommendation\": \"HIRE\",\n  \"comments\": \"Strong technical candidate, communicates clearly. Recommend hire.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/interviewer/feedback/:interviewId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "interviewer", "feedback", ":interviewId"],
+              "variable": [{ "key": "interviewId", "value": "replace-with-interview-id" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resume",
+      "item": [
+        {
+          "name": "Get my resume + profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/me/resume",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "resume"]
+            }
+          }
+        },
+        {
+          "name": "Upload + parse a resume (PDF/DOCX/TXT, max 10MB)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Cookie", "value": "next-auth.session-token={{sessionCookie}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "file", "type": "file", "src": "/path/to/your/resume.pdf" }]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/me/resume",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "me", "resume"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

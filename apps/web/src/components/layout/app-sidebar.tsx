@@ -7,6 +7,7 @@ import { signOutAction } from '@/app/(app)/dashboard/actions';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
 import { ThemeToggle } from './theme-toggle';
+import { NotificationBell } from '@/components/notification/notification-bell';
 
 type Role = 'CANDIDATE' | 'RECRUITER' | 'HIRING_MANAGER' | 'INTERVIEWER' | 'ADMIN';
 
@@ -41,7 +42,15 @@ const NAV_BY_ROLE: Record<Role, { href: string; label: string; icon: React.Eleme
   ],
 };
 
-export function AppSidebar({ role, userName }: { role: Role; userName: string }) {
+export function AppSidebar({
+  role,
+  userName,
+  unreadCount,
+}: {
+  role: Role;
+  userName: string;
+  unreadCount: number;
+}) {
   const pathname = usePathname();
   const navItems = NAV_BY_ROLE[role];
 
@@ -85,6 +94,9 @@ export function AppSidebar({ role, userName }: { role: Role; userName: string })
             </p>
           </div>
           <ThemeToggle />
+        </div>
+        <div className="mb-2">
+          <NotificationBell initialUnreadCount={unreadCount} />
         </div>
         <form action={signOutAction}>
           <button

@@ -31,6 +31,7 @@ const NAV_BY_ROLE: Record<Role, { href: string; label: string; icon: React.Eleme
   INTERVIEWER: [
     { href: '/interviewer/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/interviewer/assignments', label: 'My interviews', icon: KanbanSquare },
+    { href: '/recruiter/interviews', label: 'Schedule', icon: Briefcase },
   ],
   ADMIN: [
     { href: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 },

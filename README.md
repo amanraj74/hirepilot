@@ -12,6 +12,12 @@ HirePilot is a production-grade Applicant Tracking System where recruiters post 
 
 **🚀 Live demo:** **https://hirepilot-aman.vercel.app/** — full app live on Vercel + Neon Postgres (try `/jobs` for 10 seeded listings, sign in as `recruiter@hirepilot.dev` / `Demo@12345`)
 
+**🎬 Demo video:** _(record with Loom, paste the URL here)_ — script at [`docs/video/demo-video-script.md`](docs/video/demo-video-script.md)
+
+**📐 Architecture:** [`docs/architecture/system-context.md`](docs/architecture/system-context.md) · [ER diagram](docs/architecture/er-diagram.mmd) · [rendered](docs/architecture/er-diagram.html)
+
+**🔌 API:** [`docs/api/openapi.json`](docs/api/openapi.json) (OpenAPI 3.0)
+
 ---
 
 ## Table of Contents

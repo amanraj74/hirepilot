@@ -1,0 +1,48 @@
+fix(auth): replace broken NextAuth v4 signIn call with the v4 credentials flow
+
+Root cause: NextAuth v4 does NOT export `signIn`/`signOut` as
+top-level helpers — that pattern only works in Auth.js v5. In v4,
+`NextAuth(authOptions)` returns the API route handler, not a helpers
+object. The destructure `const { auth, signIn, signOut } =
+NextAuth(authOptions)` always produced `undefined` for all three.
+
+That made `signIn('credentials', ...)` blow up with
+"TypeError: (0, _server_auth__WEBPACK_IMPORTED_MODULE_2__.signIn)
+is not a function" — the actual error message redacted in production
+as "Application error: server-side exception". The dev server
+terminal showed the full trace:
+
+  TypeError: (0 , _server_auth__WEBPACK_IMPORTED_MODULE_2__.signIn)
+  is not a function
+      at loginAction (src\app\(auth)\login\actions.ts:19:17)
+
+The codebase had this wrong from day one — the brief's
+`signIn/signOut` examples assumed v5 conventions.
+
+Fix:
+- server/auth/index.ts: keep only `auth()` (wraps getServerSession
+  for App Router). No more broken signIn/signOut exports.
+- (auth)/login/{actions.ts,google-action.ts}: deleted. Replaced with
+  (auth)/login/login-form.tsx — a client component that:
+  1. Fetches the CSRF token from /api/auth/csrf on mount
+  2. Submits credentials directly to /api/auth/callback/credentials
+     via fetch with `redirect: 'manual'`
+  3. On opaqueredirect, navigates to /dashboard
+  This is exactly what NextAuth v4 documents and the only path that
+  actually works in v4.
+- (app)/dashboard/actions.ts signOutAction: rewritten to POST to
+  /api/auth/signout with the CSRF token (same v4 idiom).
+- (auth)/signup/page.tsx: removed the broken GoogleButton that
+  imported the deleted google-action.ts.
+
+Bonus:
+- Added a Show/Hide password toggle to the login form. Cheap UX win.
+
+The Google sign-in path is now disabled end-to-end (no
+GOOGLE_CLIENT_ID/SECRET in env). If you want it back, add a
+`signInWithGoogle` client function that calls
+`signIn('google', { callbackUrl: '/dashboard' })` from
+next-auth/react, wrap the app in SessionProvider, and re-add a Google
+button.
+
+Typecheck and build clean.

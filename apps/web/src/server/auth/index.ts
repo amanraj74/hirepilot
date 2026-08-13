@@ -1,11 +1,22 @@
-// Server-side auth helpers (used by server actions and API routes).
-// The route handler at app/api/auth/[...nextauth]/route.ts is the canonical
-// NextAuth() invocation; this module re-instantiates for signIn/signOut/auth()
-// access from server components and actions. Both instances share the same
-// PrismaAdapter and JWT secret — sessions and JWTs are interchangeable.
+// Server-side auth helpers for NextAuth v4.
+//
+// IMPORTANT: In NextAuth v4 the default `NextAuth(authOptions)` call
+// returns the API route handler — NOT a helpers object. The pattern
+// `const { auth, signIn, signOut } = NextAuth(authOptions)` only works
+// in Auth.js v5. Calling `signIn` from a server action in v4 throws
+// "TypeError: ... is not a function" because the destructured value is
+// always undefined.
+//
+// What v4 actually gives us:
+//   - NextAuth(authOptions)        → API route handler (use in [...nextauth]/route.ts)
+//   - getServerSession(authOptions) → server-side session reader
+//
+// signIn happens client-side by POSTing to /api/auth/callback/credentials
+// (see LoginForm in login-form.tsx).
 
-import NextAuth from 'next-auth';
+import { getServerSession } from 'next-auth';
 import { authOptions } from './config';
 
-const nextAuth = NextAuth(authOptions);
-export const { auth, signIn, signOut } = nextAuth;
+export async function auth() {
+  return getServerSession(authOptions);
+}

@@ -1,15 +1,13 @@
 // Resume service — orchestrates upload, parse, store, profile sync.
 //
-// In dev: file is written to apps/web/.uploads/ (gitignored) and the URL
-// stored on CandidateProfile points to a local /api/uploads/[file] proxy
-// route. In prod we'd swap to Cloudinary via STORAGE_PROVIDER env.
+// File storage is delegated to the storage abstraction in
+// @/server/storage: Cloudinary when CLOUDINARY_* env vars are set,
+// otherwise the local filesystem under apps/web/public/uploads/.
 
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
-import { randomBytes } from 'node:crypto';
 import { prisma } from '@/server/db';
 import { parseResume, type ParsedResume } from '@/server/ai/resume-parser';
 import { scoreMatch, type MatchResult, type ParsedResumeLite } from '@/server/ai/match-scorer';
+import { getStorage } from '@/server/storage';
 
 const ALLOWED_MIME = new Set([
   'application/pdf',
@@ -21,8 +19,6 @@ const ALLOWED_MIME = new Set([
 const ALLOWED_EXT = new Set(['.pdf', '.docx', '.doc', '.txt']);
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
-const UPLOAD_DIR = path.join(process.cwd(), '.uploads');
-
 export class ResumeUploadError extends Error {
   constructor(
     public readonly status: number,
@@ -33,13 +29,9 @@ export class ResumeUploadError extends Error {
   }
 }
 
-async function ensureUploadDir() {
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
-}
-
 /**
- * Process an uploaded resume: validate, save to disk, parse, store metadata,
- * and sync extracted fields into the candidate profile.
+ * Process an uploaded resume: validate, save via storage, parse, store
+ * metadata, and sync extracted fields into the candidate profile.
  */
 export async function processResumeUpload(input: {
   userId: string;
@@ -48,7 +40,7 @@ export async function processResumeUpload(input: {
   if (!ALLOWED_MIME.has(input.file.type)) {
     throw new ResumeUploadError(415, `Unsupported file type: ${input.file.type || 'unknown'}`);
   }
-  const ext = path.extname(input.file.name).toLowerCase();
+  const ext = '.' + (input.file.name.split('.').pop() ?? '').toLowerCase();
   if (!ALLOWED_EXT.has(ext)) {
     throw new ResumeUploadError(415, `Unsupported file extension: ${ext}`);
   }
@@ -62,15 +54,24 @@ export async function processResumeUpload(input: {
     throw new ResumeUploadError(400, 'File is empty');
   }
 
-  await ensureUploadDir();
-
   const buffer = Buffer.from(await input.file.arrayBuffer());
-  const safeBase = path.basename(input.file.name).replace(/[^a-zA-Z0-9._-]/g, '_');
-  const storedFilename = `${randomBytes(8).toString('hex')}-${safeBase}`;
-  const storedPath = path.join(UPLOAD_DIR, storedFilename);
-  await fs.writeFile(storedPath, buffer);
 
-  const publicPath = `/uploads/${storedFilename}`;
+  // Upload via the storage abstraction.
+  const storage = await getStorage();
+  let upload;
+  try {
+    upload = await storage.upload({
+      buffer,
+      filename: input.file.name,
+      mimeType: input.file.type || 'application/octet-stream',
+      folder: 'resumes',
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Upload failed';
+    throw new ResumeUploadError(502, `Storage upload failed: ${msg}`);
+  }
+
+  const publicPath = upload.url;
   const fileType = input.file.type.startsWith('application/')
     ? input.file.type === 'application/pdf'
       ? 'PDF'
@@ -82,8 +83,8 @@ export async function processResumeUpload(input: {
   try {
     parsed = await parseResume(buffer, input.file.type || 'text/plain');
   } catch (err) {
-    // Clean up the file on parse failure.
-    await fs.unlink(storedPath).catch(() => {});
+    // Best-effort: delete the uploaded file on parse failure.
+    await storage.delete(upload.storageId).catch(() => {});
     const msg = err instanceof Error ? err.message : 'Parse failed';
     throw new ResumeUploadError(422, `Could not parse the resume: ${msg}`);
   }
@@ -98,7 +99,7 @@ export async function processResumeUpload(input: {
       data: {
         candidateId: input.userId,
         fileUrl: publicPath,
-        publicId: storedFilename,
+        publicId: upload.storageId,
         fileType,
         fileSizeBytes: input.file.size,
         originalName: input.file.name,

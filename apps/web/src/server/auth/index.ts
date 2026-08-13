@@ -20,3 +20,8 @@ import { authOptions } from './config';
 export async function auth() {
   return getServerSession(authOptions);
 }
+
+import NextAuth from 'next-auth';
+const _nextAuthHelpers = NextAuth(authOptions);
+export const signIn = _nextAuthHelpers.signIn;
+export const signOut = _nextAuthHelpers.signOut;

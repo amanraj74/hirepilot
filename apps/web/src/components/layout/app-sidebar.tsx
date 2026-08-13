@@ -2,7 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Briefcase, KanbanSquare, Building2, Settings, LogOut } from 'lucide-react';
+import {
+  BarChart3,
+  Briefcase,
+  KanbanSquare,
+  Building2,
+  Settings,
+  ShieldCheck,
+  LogOut,
+} from 'lucide-react';
 import { signOutAction } from '@/app/(app)/dashboard/actions';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
@@ -18,6 +26,7 @@ const NAV_BY_ROLE: Record<Role, { href: string; label: string; icon: React.Eleme
     { href: '/applications', label: 'My applications', icon: KanbanSquare },
     { href: '/candidate/assessments', label: 'Assessments', icon: KanbanSquare },
     { href: '/profile', label: 'Profile', icon: Settings },
+    { href: '/settings/security', label: 'Security', icon: ShieldCheck },
   ],
   RECRUITER: [
     { href: '/recruiter/dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -26,23 +35,27 @@ const NAV_BY_ROLE: Record<Role, { href: string; label: string; icon: React.Eleme
     { href: '/recruiter/pipeline', label: 'Pipeline', icon: KanbanSquare },
     { href: '/recruiter/assessments', label: 'Assessments', icon: KanbanSquare },
     { href: '/companies', label: 'Company', icon: Building2 },
+    { href: '/settings/security', label: 'Security', icon: ShieldCheck },
   ],
   HIRING_MANAGER: [
     { href: '/hiring-manager/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/hiring-manager/shortlist', label: 'Shortlist', icon: KanbanSquare },
     { href: '/recruiter/assessments', label: 'Assessments', icon: KanbanSquare },
+    { href: '/settings/security', label: 'Security', icon: ShieldCheck },
   ],
   INTERVIEWER: [
     { href: '/interviewer/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/interviewer/assignments', label: 'My interviews', icon: KanbanSquare },
     { href: '/recruiter/interviews', label: 'Schedule', icon: Briefcase },
     { href: '/candidate/assessments', label: 'My assessments', icon: KanbanSquare },
+    { href: '/settings/security', label: 'Security', icon: ShieldCheck },
   ],
   ADMIN: [
     { href: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/admin/users', label: 'Users', icon: Settings },
     { href: '/admin/companies', label: 'Companies', icon: Building2 },
     { href: '/admin/audit-logs', label: 'Audit logs', icon: BarChart3 },
+    { href: '/settings/security', label: 'Security', icon: ShieldCheck },
   ],
 };
 

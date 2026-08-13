@@ -1,7 +1,5 @@
-// Smoke test — guarantees `pnpm test` succeeds until Vitest suites ship on Day 2.
-// Real tests will be added incrementally as each module lands.
-//
-// Pattern: add a single trivial assertion under `tests/unit/` per feature.
+// Smoke test to verify the Vitest setup itself works.
+// Picked up by `pnpm --filter web test`.
 
 import { describe, it, expect } from 'vitest';
 

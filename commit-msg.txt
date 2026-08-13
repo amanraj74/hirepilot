@@ -1,0 +1,31 @@
+fix(errors): add custom error.tsx at every route segment
+
+The user keeps seeing Next.js's built-in "Application error" page with
+just a digest and no real error message. The previous global-error.tsx
+fires only when the root layout itself crashes, which isn't happening
+here — the actual exception is somewhere in a child route segment.
+
+This change adds a route-segment error.tsx in:
+- src/app/error.tsx                       (root fallback)
+- src/app/(marketing)/error.tsx           (marketing group)
+- src/app/(auth)/error.tsx                (auth group)
+- src/app/(app)/error.tsx                 (authenticated app group)
+- src/app/global-error.tsx                (catastrophic, already added)
+
+All four use the same minimal "use client" component pattern:
+- Render error.message if present (Next.js redacts this in production
+  unless it's a server component error, in which case we get the
+  generic "An error occurred in the Server Components render" text)
+- Always render error.digest
+- Collapsible stack via <details>/<summary> — no useState in the
+  render path, only inside the onToggle handler
+- Try again button wired to Next.js's reset()
+
+The components are deliberately small and CSS-only (Tailwind utilities
+matching the rest of the app). No external imports beyond React +
+useState. That makes them extremely unlikely to themselves throw.
+
+Next time the user reports an error, the error message will actually
+appear on screen (or be redacted to the generic Next.js text), but
+the digest will always be visible — and combined with Vercel's
+runtime logs we'll finally be able to map digest → real cause.

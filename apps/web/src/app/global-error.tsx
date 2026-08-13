@@ -1,9 +1,9 @@
 'use client';
 
-// Root error boundary. Shows the actual error message + digest so we
-// can debug server-side exceptions instead of staring at an opaque
-// digest hash. The stack is omitted by default to avoid leaking
-// internal paths to end-users; click "Show details" to inspect.
+// Catch-all error boundary for catastrophic failures. Replaces the
+// root layout (must include <html>/<body>). In production the actual
+// error.message is often redacted by Next.js — only the digest is
+// guaranteed useful. We surface both.
 
 import { useState } from 'react';
 
@@ -14,107 +14,56 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const [showDetails, setShowDetails] = useState(false);
+  const [open, setOpen] = useState(false);
+  const message = error && typeof error.message === 'string' ? error.message : '';
+  const digest = error && typeof error.digest === 'string' ? error.digest : '';
+
   return (
     <html lang="en">
-      <body
-        style={{
-          fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-          padding: '2rem',
-          maxWidth: '720px',
-          margin: '0 auto',
-          color: '#0a0a0a',
-          background: '#fafafa',
-        }}
-      >
-        <div
-          style={{
-            background: '#fff',
-            border: '1px solid #e5e5e5',
-            borderRadius: '12px',
-            padding: '2rem',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-          }}
-        >
-          <h1 style={{ marginTop: 0, fontSize: '1.5rem' }}>Application error</h1>
-          <p style={{ color: '#525252', marginBottom: '1rem' }}>
-            A server-side exception prevented this page from rendering.
-          </p>
-
-          {error.message && (
-            <div
-              style={{
-                background: '#fef2f2',
-                border: '1px solid #fecaca',
-                borderRadius: '8px',
-                padding: '0.75rem 1rem',
-                marginBottom: '1rem',
-                fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-                fontSize: '0.875rem',
-                color: '#991b1b',
-                overflowX: 'auto',
-              }}
-            >
-              <strong>Error:</strong> {error.message}
-            </div>
-          )}
-
-          {error.digest && (
-            <p
-              style={{
-                fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-                fontSize: '0.75rem',
-                color: '#737373',
-                marginBottom: '1rem',
-              }}
-            >
-              <strong>Digest:</strong> {error.digest}
+      <body className="bg-zinc-50 text-zinc-900 antialiased">
+        <main className="mx-auto max-w-xl p-6 my-12">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+            <h1 className="text-2xl font-bold text-red-900">Application error</h1>
+            <p className="mt-2 text-red-700">
+              A server-side exception prevented this page from rendering.
             </p>
-          )}
 
-          <details
-            open={showDetails}
-            onToggle={(e) => setShowDetails((e.target as HTMLDetailsElement).open)}
-            style={{ marginBottom: '1rem' }}
-          >
-            <summary style={{ cursor: 'pointer', color: '#525252', fontSize: '0.875rem' }}>
-              {showDetails ? 'Hide details' : 'Show details'}
-            </summary>
-            {error.stack && (
-              <pre
-                style={{
-                  background: '#f5f5f5',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '8px',
-                  padding: '0.75rem',
-                  fontSize: '0.75rem',
-                  overflowX: 'auto',
-                  whiteSpace: 'pre-wrap',
-                  marginTop: '0.5rem',
-                }}
-              >
-                {error.stack}
+            {message && (
+              <pre className="mt-4 whitespace-pre-wrap rounded-md border border-red-200 bg-white p-3 text-xs text-red-900">
+                <strong>Error:</strong> {message}
               </pre>
             )}
-          </details>
 
-          <button
-            type="button"
-            onClick={() => reset()}
-            style={{
-              background: '#0a0a0a',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '0.625rem 1.25rem',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-          >
-            Try again
-          </button>
-        </div>
+            {digest && (
+              <p className="mt-2 font-mono text-xs text-red-700">
+                <strong>Digest:</strong> {digest}
+              </p>
+            )}
+
+            <details
+              open={open}
+              onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
+              className="mt-3"
+            >
+              <summary className="cursor-pointer text-sm text-red-700">
+                {open ? 'Hide details' : 'Show details'}
+              </summary>
+              {error.stack && (
+                <pre className="mt-2 whitespace-pre-wrap rounded-md bg-zinc-50 p-3 text-xs">
+                  {error.stack}
+                </pre>
+              )}
+            </details>
+
+            <button
+              type="button"
+              onClick={() => reset()}
+              className="mt-4 rounded-md bg-red-900 px-4 py-2 text-sm font-medium text-white hover:bg-red-800"
+            >
+              Try again
+            </button>
+          </div>
+        </main>
       </body>
     </html>
   );

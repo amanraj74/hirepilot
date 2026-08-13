@@ -14,24 +14,15 @@ const geistMono = localFont({
   weight: '100 900',
 });
 
-// Runs before React hydrates. Without this, every page load in dark mode
-// flashes light → dark (FOUC). Reads localStorage, falls back to the OS
-// preference, sets the .dark class on <html> before any pixels paint.
-// Strategy: next/script with strategy="beforeInteractive" ensures it
-// queues in <head> ahead of hydration.
-const themeInit = `
-(function() {
-  try {
-    var stored = localStorage.getItem('hirepilot-theme');
-    var prefers = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var theme = stored === 'dark' || stored === 'light'
-      ? stored
-      : (prefers ? 'dark' : 'light');
-    if (theme === 'dark') document.documentElement.classList.add('dark');
-    document.documentElement.dataset.theme = theme;
-  } catch (e) {}
-})();
-`;
+// Inline FOUC-prevention script. Inlined into the document by
+// `next/script` with strategy="beforeInteractive" so it runs before any
+// pixels paint. Without this, every page load in dark mode flashes
+// light → dark. Uses localStorage first, then prefers-color-scheme, then
+// defaults to light. Wrapped in try/catch so private-mode browsers
+// don't crash. Using dangerouslySetInnerHTML rather than children so the
+// raw string is emitted verbatim — avoids any chance of React
+// interpreting the script text as JSX.
+const themeInit = `(function(){try{var s=localStorage.getItem('hirepilot-theme');var t=(s==='dark'||s==='light')?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.classList.add('dark');document.documentElement.dataset.theme=t;}catch(e){}})();`;
 
 export const metadata: Metadata = {
   title: {
@@ -59,12 +50,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <Script id="hirepilot-theme-init" strategy="beforeInteractive">
-          {themeInit}
-        </Script>
-      </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* Hoisted into <head> automatically by Next.js */}
+        <Script
+          id="hirepilot-theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: themeInit }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

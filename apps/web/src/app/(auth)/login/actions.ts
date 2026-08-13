@@ -30,8 +30,21 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
       if (authError.type === 'CredentialsSignin') {
         return { error: 'Invalid email or password.' };
       }
+      if (authError.type === 'NEXT_REDIRECT') {
+        throw error; // genuine redirect signal — propagate
+      }
+      // Anything else with a type is an Auth.js internal — surface it.
+      console.error('[login] Auth.js error:', authError.type, error);
       return { error: 'Could not sign in. Try again.' };
     }
+    // Unknown error — log the real message + stack so Vercel runtime
+    // logs have something actionable instead of just a digest.
+    console.error('[login] Unhandled error during signIn:', {
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : undefined,
+      stack: error instanceof Error ? error.stack : undefined,
+      cause: error instanceof Error && (error as Error & { cause?: unknown }).cause,
+    });
     throw error;
   }
 }

@@ -16,6 +16,7 @@ const NAV_BY_ROLE: Record<Role, { href: string; label: string; icon: React.Eleme
     { href: '/dashboard', label: 'Overview', icon: BarChart3 },
     { href: '/jobs', label: 'Browse jobs', icon: Briefcase },
     { href: '/applications', label: 'My applications', icon: KanbanSquare },
+    { href: '/candidate/assessments', label: 'Assessments', icon: KanbanSquare },
     { href: '/profile', label: 'Profile', icon: Settings },
   ],
   RECRUITER: [

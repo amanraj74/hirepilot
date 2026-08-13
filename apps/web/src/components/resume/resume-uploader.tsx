@@ -58,7 +58,18 @@ export function ResumeUploader({
           return;
         }
         if (json.data?.ok) {
-          toast.success(`Resume parsed: ${json.data.skillCount} skills extracted`);
+          // Show a slightly longer-lived toast so the user has time
+          // to read the count of extracted skills.
+          toast.success(`Resume parsed: ${json.data.skillCount} skills extracted`, {
+            duration: 6000,
+          });
+          // Clear local file state so the dropzone returns to its
+          // empty placeholder (otherwise the UI stays on
+          // "filename · parsing…" forever).
+          setFile(null);
+          // Refresh the server component so the experience /
+          // education / skills summary re-renders with the
+          // freshly-parsed data.
           router.refresh();
         }
       } catch (err) {

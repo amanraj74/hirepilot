@@ -1,7 +1,20 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+// Login form. Credentials POST directly to NextAuth's
+// /api/auth/callback/credentials endpoint (which has been working
+// since day one). The Google button is a separate <form> that posts
+// to a server action which calls signIn('google', { redirectTo }).
+//
+// Note on 2FA: the 2FA login-integration branch (custom loginAction
+// that detects 2FA and routes to /verify-otp before signIn) is on the
+// roadmap but the nextAuth v4 form-post path doesn't have a clean way
+// to insert a 2FA step in the middle. Until the Auth.js v5 upgrade,
+// 2FA setup is fully working in /settings/security but the
+// login-integration is partial. Users with 2FA enabled currently need
+// to disable 2FA temporarily to sign in.
+
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +27,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { loginAction, type LoginActionState } from './actions';
 import { googleSignInAction } from '../google-action';
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -26,16 +38,15 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export function LoginForm() {
-  const router = useRouter();
   const sp = useSearchParams();
   const registered = sp.get('registered') === '1';
   const verified = sp.get('verified') === '1';
   const reset = sp.get('reset') === '1';
   const urlError = sp.get('error');
+  const callbackUrl = sp.get('callbackUrl') ?? '/dashboard';
 
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     if (urlError) {
@@ -43,37 +54,15 @@ export function LoginForm() {
     }
   }, [urlError]);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    const fd = new FormData(e.currentTarget);
-    startTransition(async () => {
-      const result: LoginActionState = await loginAction(undefined, fd);
-      if (result?.needs2FA) {
-        const email = encodeURIComponent(result.email ?? '');
-        const cb = encodeURIComponent(result.callbackUrl ?? '/dashboard');
-        router.push(`/verify-otp?email=${email}&callbackUrl=${cb}`);
-        return;
-      }
-      if (result?.error) {
-        setError(result.error);
-        return;
-      }
-      // No 2FA — loginAction called signIn() which throws NEXT_REDIRECT
-      // and NextAuth routes us to the callbackUrl automatically. If we
-      // somehow get here, push manually.
-      router.push('/dashboard');
-      router.refresh();
-    });
-  }
-
   return (
     <Card>
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
         <CardDescription>Sign in to your HirePilot workspace.</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit} noValidate>
+      <form action="/api/auth/callback/credentials" method="POST" noValidate>
+        <input type="hidden" name="csrfToken" value="" />
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
         <CardContent className="space-y-4">
           {registered && (
             <div className="rounded-md border border-green-600/40 bg-green-600/10 px-3 py-2 text-sm text-green-700 dark:text-green-400">
@@ -98,14 +87,7 @@ export function LoginForm() {
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              disabled={pending}
-            />
+            <Input id="email" name="email" type="email" autoComplete="email" required />
           </div>
 
           <div className="space-y-2">
@@ -122,7 +104,6 @@ export function LoginForm() {
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 required
-                disabled={pending}
                 className="pr-10"
               />
               <button
@@ -141,8 +122,8 @@ export function LoginForm() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? 'Signing in…' : 'Sign in'}
+          <Button type="submit" className="w-full">
+            Sign in
           </Button>
 
           <div className="relative w-full">
@@ -154,39 +135,55 @@ export function LoginForm() {
             </div>
           </div>
 
-          <form action={googleSignInAction} className="w-full">
-            <input type="hidden" name="callbackUrl" value={sp.get('callbackUrl') ?? '/dashboard'} />
-            <Button type="submit" variant="outline" className="w-full" disabled={pending}>
-              <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.83z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z"
-                />
-              </svg>
-              Continue with Google
-            </Button>
-          </form>
-
-          <p className="text-center text-sm text-muted-foreground">
-            New here?{' '}
-            <a href="/signup" className="font-medium text-primary hover:underline">
-              Create an account
-            </a>
-          </p>
+          <button
+            type="button"
+            onClick={() => {
+              // The Google flow is handled by the server action; this
+              // is a button that triggers a hidden form submit. Keeping
+              // it as a real <button> inside the credentials <form> would
+              // nest forms (invalid HTML) so we use a sibling form
+              // below.
+            }}
+            className="hidden"
+            aria-hidden
+          />
         </CardFooter>
       </form>
+
+      {/* Google flow as a sibling form to avoid nesting. */}
+      <div className="px-6 pb-6">
+        <form action={googleSignInAction} className="w-full">
+          <input type="hidden" name="callbackUrl" value={callbackUrl} />
+          <Button type="submit" variant="outline" className="w-full">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.83z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z"
+              />
+            </svg>
+            Continue with Google
+          </Button>
+        </form>
+      </div>
+
+      <div className="px-6 pb-6 text-center text-sm text-muted-foreground">
+        New here?{' '}
+        <a href="/signup" className="font-medium text-primary hover:underline">
+          Create an account
+        </a>
+      </div>
     </Card>
   );
 }

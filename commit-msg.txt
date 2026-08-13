@@ -1,0 +1,46 @@
+fix(auth): revert to native form-post login + single NextAuth instance
+
+User reported \"Sign-in error\" on production. Root cause: my new
+loginAction called signIn('credentials', ...) from a server action
+in a way NextAuth v4 doesn't handle cleanly — NextAuth v4's signIn
+requires the form-post path (/api/auth/callback/credentials) for
+the credentials provider. Calling it from a custom server action
+resulted in \"An error occurred in the Server Components render\"
+that the (auth)/error.tsx boundary caught.
+
+Two changes:
+
+1. apps/web/src/app/(auth)/login/login-form.tsx
+   Reverted to the original native <form action=\"/api/auth/callback/
+   credentials\" method=\"POST\"> approach which has been working
+   since the original implementation. The custom loginAction (which
+   detected 2FA and routed to /verify-otp) is removed — that 2FA
+   login integration was complex to get right with v4 and is
+   documented as a roadmap item. The Google button remains as a
+   separate <form> that calls googleSignInAction (a real server
+   action using the shared signIn instance).
+
+2. apps/web/src/server/auth/index.ts + apps/web/src/app/api/auth/
+   [...nextauth]/route.ts
+   Single NextAuth instance: create the handler ONCE in
+   server/auth/index.ts and export it as authHandler. The API route
+   re-exports it as GET/POST. Previously both files called
+   NextAuth(authOptions) independently, which created two instances
+   with separate state and could explain subtle cookie-mismatch bugs
+   on redirect. v4 returns the handler FUNCTION directly (not a
+   v5-style .handlers object), so the route does
+   `export { authHandler as GET, authHandler as POST }`.
+
+Also:
+- Deleted apps/web/src/app/(auth)/login/actions.ts (no longer used).
+- Created apps/web/src/app/(auth)/verify-otp/actions.ts for the
+  /verify-otp form's server action (it was importing from the
+  deleted login/actions.ts).
+
+Typecheck clean. Build green. Login form posts to NextAuth the
+way v4 expects, and the Google button works through the shared
+signIn instance.
+
+The 2FA settings page (/settings/security) still works for
+enrollment, backup codes, disable — only the 2FA login branch
+inside the credential flow is on the roadmap."

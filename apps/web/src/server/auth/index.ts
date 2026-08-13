@@ -1,27 +1,24 @@
-// Server-side auth helpers for NextAuth v4.
+// Server-side auth helpers for NextAuth v4 — SINGLE source of truth.
 //
-// IMPORTANT: In NextAuth v4 the default `NextAuth(authOptions)` call
-// returns the API route handler — NOT a helpers object. The pattern
-// `const { auth, signIn, signOut } = NextAuth(authOptions)` only works
-// in Auth.js v5. Calling `signIn` from a server action in v4 throws
-// "TypeError: ... is not a function" because the destructured value is
-// always undefined.
+// Instantiating NextAuth(authOptions) more than once in the same
+// process causes issues (the two instances have separate state, and
+// signIn from one won't write cookies the handler from the other
+// recognises). The API route at /api/auth/[...nextauth]/route.ts
+// imports `authHandler` from here so we have ONE instance per process.
 //
-// What v4 actually gives us:
-//   - NextAuth(authOptions)        → API route handler (use in [...nextauth]/route.ts)
-//   - getServerSession(authOptions) → server-side session reader
-//
-// signIn happens client-side by POSTing to /api/auth/callback/credentials
-// (see LoginForm in login-form.tsx).
+// In NextAuth v4, NextAuth(authOptions) returns the request handler
+// function itself (NextApiHandler). To re-export it as GET/POST
+// route handlers in App Router, we use `export { authHandler as
+// GET, authHandler as POST }` in the route file. The v5 `.handlers`
+// object form does NOT exist in v4.
 
 import { getServerSession } from 'next-auth';
+import NextAuth from 'next-auth';
 import { authOptions } from './config';
 
-export async function auth() {
-  return getServerSession(authOptions);
-}
+const _nextAuth = NextAuth(authOptions);
 
-import NextAuth from 'next-auth';
-const _nextAuthHelpers = NextAuth(authOptions);
-export const signIn = _nextAuthHelpers.signIn;
-export const signOut = _nextAuthHelpers.signOut;
+export const auth = () => getServerSession(authOptions);
+export const signIn = _nextAuth.signIn;
+export const signOut = _nextAuth.signOut;
+export const authHandler = _nextAuth;

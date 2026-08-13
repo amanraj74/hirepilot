@@ -1,10 +1,9 @@
-// NextAuth.js v4 catch-all route handler (App Router pattern, canonical).
-// Handles /api/auth/signin, /api/auth/signout, /api/auth/callback/*,
-// /api/auth/session, /api/auth/csrf, /api/auth/providers.
+// NextAuth.js v4 catch-all route handler. The shared NextAuth
+// instance is created in src/server/auth/index.ts and exported as
+// the `authHandler` callable. In v4, NextAuth(authOptions) returns
+// the request handler function itself — there's no `.handlers`
+// object like in v5.
 
-import NextAuth from 'next-auth';
-import { authOptions } from '@/server/auth/config';
+import { authHandler } from '@/server/auth';
 
-const handler = NextAuth(authOptions);
-
-export { handler as GET, handler as POST };
+export { authHandler as GET, authHandler as POST };

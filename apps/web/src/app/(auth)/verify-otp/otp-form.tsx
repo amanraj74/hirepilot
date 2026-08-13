@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { verifyOtpAction, type LoginActionState } from '@/app/(auth)/login/actions';
+import { verifyOtpAction, type VerifyOtpState } from './actions';
 
 export function OtpForm() {
   const router = useRouter();
@@ -30,7 +30,7 @@ export function OtpForm() {
       if (mode === 'totp') fd.set('token', token.trim());
       else fd.set('backupCode', backupCode.trim());
       fd.set('callbackUrl', callbackUrl);
-      const result: LoginActionState = await verifyOtpAction(undefined, fd);
+      const result: VerifyOtpState = await verifyOtpAction(undefined, fd);
       if (result?.error) {
         setError(result.error);
         requestAnimationFrame(() => inputRef.current?.focus());

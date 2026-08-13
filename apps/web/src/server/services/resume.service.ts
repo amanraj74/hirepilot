@@ -101,13 +101,23 @@ export async function processResumeUpload(input: {
 
   // Persist ResumeFile + sync CandidateProfile (atomic).
   await prisma.$transaction(async (tx) => {
+    // Resume.candidateId references CandidateProfile.id (NOT User.id),
+    // so we have to look up the profile first. The profile is created
+    // on sign-up for candidates, so this should always exist.
+    const profile = await tx.candidateProfile.upsert({
+      where: { userId: input.userId },
+      update: {},
+      create: { userId: input.userId },
+      select: { id: true },
+    });
+
     // Get the existing version count for this candidate.
-    const existing = await tx.resume.count({ where: { candidateId: input.userId } });
+    const existing = await tx.resume.count({ where: { candidateId: profile.id } });
     const newVersion = existing + 1;
 
     const resumeFile = await tx.resume.create({
       data: {
-        candidateId: input.userId,
+        candidateId: profile.id,
         fileUrl: publicPath,
         publicId: upload.storageId,
         fileType,

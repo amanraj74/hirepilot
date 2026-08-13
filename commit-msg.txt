@@ -1,0 +1,22 @@
+fix(routes): add /companies page, fix assessments onSuccess RSC error
+
+Two issues fixed in this commit:
+
+1. /companies returned 404. The sidebar link exists in the recruiter
+   nav (NAV_BY_ROLE.RECRUITER in app-sidebar.tsx) but no page
+   matched. Created apps/web/src/app/(app)/companies/page.tsx — a
+   real Server Component that reads the authenticated user's company,
+   lists team members, and shows active jobs + 4 stat cards
+   (open jobs, team size, industry, offices). Scoped to the session
+   user's companyId so a recruiter only sees their own company.
+
+2. /recruiter/assessments threw "Event handlers cannot be passed to
+   Client Component props" because the page (a Server Component) was
+   passing `onSuccess={() => window.location.href = ...}` to the
+   AssessmentBuilder client component. Extracted the closure into a
+   tiny client wrapper at
+   apps/web/src/app/(app)/recruiter/assessments/_components/create-assessment-tab.tsx
+   so the page can stay a Server Component (auth + DB fetch stay on
+   the server) and only the small wrapper is shipped to the browser.
+
+Typecheck clean, build green. Dev server should HMR both changes.

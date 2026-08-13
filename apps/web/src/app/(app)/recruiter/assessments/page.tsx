@@ -1,13 +1,12 @@
 import Link from 'next/link';
-import { Plus, FileText, Clock, CheckCircle2, BarChart3 } from 'lucide-react';
+import { Plus, FileText, CheckCircle2 } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/server/auth/config';
 import { listAssessmentsForRecruiter } from '@/server/services/assessments.service';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AssessmentBuilder } from '@/components/assessment/assessment-builder';
+import { CreateAssessmentTab } from './_components/create-assessment-tab';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -98,11 +97,7 @@ export default async function AssessmentsPage() {
         </TabsContent>
 
         <TabsContent value="create">
-          <AssessmentBuilder
-            onSuccess={() => {
-              window.location.href = '/recruiter/assessments';
-            }}
-          />
+          <CreateAssessmentTab />
         </TabsContent>
       </Tabs>
     </div>

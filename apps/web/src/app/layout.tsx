@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import Script from 'next/script';
 import './globals.css';
 
 const geistSans = localFont({
@@ -12,6 +13,25 @@ const geistMono = localFont({
   variable: '--font-geist-mono',
   weight: '100 900',
 });
+
+// Runs before React hydrates. Without this, every page load in dark mode
+// flashes light → dark (FOUC). Reads localStorage, falls back to the OS
+// preference, sets the .dark class on <html> before any pixels paint.
+// Strategy: next/script with strategy="beforeInteractive" ensures it
+// queues in <head> ahead of hydration.
+const themeInit = `
+(function() {
+  try {
+    var stored = localStorage.getItem('hirepilot-theme');
+    var prefers = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = stored === 'dark' || stored === 'light'
+      ? stored
+      : (prefers ? 'dark' : 'light');
+    if (theme === 'dark') document.documentElement.classList.add('dark');
+    document.documentElement.dataset.theme = theme;
+  } catch (e) {}
+})();
+`;
 
 export const metadata: Metadata = {
   title: {
@@ -39,6 +59,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script id="hirepilot-theme-init" strategy="beforeInteractive">
+          {themeInit}
+        </Script>
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
     </html>
   );

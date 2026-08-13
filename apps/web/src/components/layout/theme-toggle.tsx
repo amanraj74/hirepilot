@@ -3,24 +3,37 @@
 import { useEffect, useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
+// Same storage key as the FOUC-prevention inline script in app/layout.tsx
+// so the two never disagree at hydration.
+const STORAGE_KEY = 'hirepilot-theme';
+
+function readInitial(): 'light' | 'dark' {
+  if (typeof document === 'undefined') return 'light';
+  if (document.documentElement.classList.contains('dark')) return 'dark';
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  if (stored === 'dark' || stored === 'light') return stored;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 export function ThemeToggle() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setTheme(readInitial());
     setMounted(true);
-    const stored = window.localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initial = stored === 'dark' || (!stored && prefersDark) ? 'dark' : 'light';
-    setTheme(initial);
-    document.documentElement.classList.toggle('dark', initial === 'dark');
   }, []);
 
   function toggle() {
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
     document.documentElement.classList.toggle('dark', next === 'dark');
-    window.localStorage.setItem('theme', next);
+    document.documentElement.dataset.theme = next;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // localStorage may be unavailable (private mode / iframe sandbox).
+    }
   }
 
   if (!mounted) {

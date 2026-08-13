@@ -39,9 +39,6 @@ export function MarketingFooter() {
               The AI-powered Applicant Tracking System for recruiters who don&rsquo;t have time for
               tools that don&rsquo;t work.
             </p>
-            <p className="text-xs text-muted-foreground">
-              Built for the DevFusion 4.O hackathon · Problem Statement 2.
-            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">

@@ -17,7 +17,7 @@ export function Hero() {
       <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-20 text-center sm:px-6 md:py-28">
         <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-          Built for DevFusion 4.O · Problem Statement 2
+          AI-powered applicant tracking
         </span>
 
         <h1 className="max-w-3xl text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">

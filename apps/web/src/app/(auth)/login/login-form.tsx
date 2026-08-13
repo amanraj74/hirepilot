@@ -5,8 +5,14 @@
 // This is the only way signIn works in NextAuth v4 — the top-level
 // `signIn` from `next-auth` is a v5-only API; in v4, NextAuth(authOptions)
 // returns a route handler, not a helpers object.
+//
+// We do a client-side fetch to /api/auth/csrf to get the token, then
+// mount it as a hidden input. The form is a plain <form> so the browser
+// handles the 302 redirect natively — NextAuth sets the session cookie
+// and either redirects to callbackUrl (success) or back to /login with
+// ?error= (failure). Much more reliable than fetch + redirect: 'manual'.
 
-import { useState, useEffect, useTransition } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,6 +31,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   CredentialsSignin: 'Invalid email or password.',
   Verification: 'Verification link is invalid or has expired.',
   Configuration: 'Auth misconfigured. Check AUTH_SECRET and NEXTAUTH_URL.',
+  AccessDenied: 'Access denied.',
   default: 'Could not sign in. Try again.',
 };
 
@@ -36,16 +43,10 @@ export function LoginForm() {
   const reset = sp.get('reset') === '1';
   const urlError = sp.get('error');
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [csrfToken, setCsrfToken] = useState<string>('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
 
-  // Fetch a CSRF token once on mount. NextAuth v4 requires it on every
-  // credentials POST. The endpoint is public and returns the token in a
-  // JSON body.
   useEffect(() => {
     fetch('/api/auth/csrf')
       .then((r) => r.json())
@@ -53,65 +54,14 @@ export function LoginForm() {
         if (data?.csrfToken) setCsrfToken(data.csrfToken);
       })
       .catch(() => {
-        // CSRF fetch failed — NextAuth will still reject the POST and
+        // CSRF fetch failed — NextAuth will reject the POST and
         // surface the error via the redirect query.
       });
 
-    // Surface a query-string error from an OAuth/provider callback.
-    if (urlError && !error) {
+    if (urlError) {
       setError(ERROR_MESSAGES[urlError] ?? null);
     }
-  }, [urlError, error]);
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-
-    if (!csrfToken) {
-      setError('Still warming up. Please retry in a moment.');
-      return;
-    }
-
-    startTransition(async () => {
-      try {
-        const form = new FormData();
-        form.append('csrfToken', csrfToken);
-        form.append('email', email);
-        form.append('password', password);
-        form.append('callbackUrl', '/dashboard');
-        form.append('redirect', 'true');
-
-        // NextAuth v4 credentials endpoint. On success it 302s to the
-        // callbackUrl; on failure it 302s to /login?error=CredentialsSignin.
-        const res = await fetch('/api/auth/callback/credentials', {
-          method: 'POST',
-          body: form,
-          redirect: 'manual',
-        });
-
-        // Fetch indicates redirect (we asked for 'manual' so this is
-        // opaque). A successful sign-in sets a session cookie; we then
-        // push the user to the dashboard.
-        if (res.type === 'opaqueredirect' || res.status === 0 || res.status === 302) {
-          router.push('/dashboard');
-          router.refresh();
-          return;
-        }
-
-        if (res.status === 302 || res.status === 303) {
-          const location = res.headers.get('location') ?? '/dashboard';
-          router.push(location);
-          router.refresh();
-          return;
-        }
-
-        // Fallback: treat as failure.
-        setError(ERROR_MESSAGES.CredentialsSignin ?? null);
-      } catch {
-        setError(ERROR_MESSAGES.default ?? null);
-      }
-    });
-  }
+  }, [urlError]);
 
   return (
     <Card>
@@ -119,7 +69,10 @@ export function LoginForm() {
         <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
         <CardDescription>Sign in to your HirePilot workspace.</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit} noValidate>
+      <form action="/api/auth/callback/credentials" method="POST" noValidate>
+        <input type="hidden" name="csrfToken" value={csrfToken} />
+        <input type="hidden" name="callbackUrl" value="/dashboard" />
+
         <CardContent className="space-y-4">
           {registered && (
             <div className="rounded-md border border-green-600/40 bg-green-600/10 px-3 py-2 text-sm text-green-700 dark:text-green-400">
@@ -144,16 +97,7 @@ export function LoginForm() {
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={pending}
-            />
+            <Input id="email" name="email" type="email" autoComplete="email" required />
           </div>
 
           <div className="space-y-2">
@@ -170,9 +114,6 @@ export function LoginForm() {
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={pending}
                 className="pr-10"
               />
               <button
@@ -191,8 +132,8 @@ export function LoginForm() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={pending || !csrfToken}>
-            {pending ? 'Signing in…' : 'Sign in'}
+          <Button type="submit" className="w-full" disabled={!csrfToken}>
+            {!csrfToken ? 'Loading…' : 'Sign in'}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             New here?{' '}

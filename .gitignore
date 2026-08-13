@@ -83,3 +83,9 @@ packages/shared/README.md
 # ADRs are internal design records
 docs/adr/
 apps/web/tests/fixtures/
+
+# debug curl files accidentally landing in repo root
+login2.html
+homepage.html
+dev-server.log
+

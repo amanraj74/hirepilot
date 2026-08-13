@@ -59,23 +59,61 @@ export function AssessmentBuilder({ onSuccess }: { onSuccess: () => void }) {
   }
 
   async function submit() {
-    if (!title.trim()) {
-      toast.error('Title is required');
+    const trimmedTitle = title.trim();
+    if (trimmedTitle.length < 3) {
+      toast.error('Title must be at least 3 characters');
       return;
     }
-    const cleaned = questions
-      .map((q) => {
-        const opts = q.type === 'MCQ' ? q.options.map((o) => o.trim()).filter(Boolean) : [];
-        return {
+
+    // Client-side validation: keep parity with the Zod schema on the
+    // server (min 5 chars on prompt, MCQ needs at least 2 options,
+    // exactly one option is the "correct" answer). This stops a 422
+    // round-trip for the obvious mistakes.
+    type ValidatedQuestion = {
+      type: QuestionType;
+      prompt: string;
+      options?: string[];
+      solution?: string;
+      points: number;
+      orderIndex: number;
+    };
+
+    const cleaned: ValidatedQuestion[] = [];
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
+      if (!q) continue;
+      const prompt = q.prompt.trim();
+      if (prompt.length === 0) continue;
+      if (prompt.length < 5) {
+        toast.error(`Question ${i + 1} prompt must be at least 5 characters`);
+        return;
+      }
+      if (q.type === 'MCQ') {
+        const opts = q.options.map((o) => o.trim()).filter(Boolean);
+        if (opts.length < 2) {
+          toast.error(`Question ${i + 1} needs at least 2 non-empty options`);
+          return;
+        }
+        cleaned.push({
+          type: 'MCQ',
+          prompt,
+          options: opts,
+          // Server auto-grades MCQ by marking the first option as
+          // correct, so we send solution = options[0] for grading.
+          solution: opts[0],
+          points: 10,
+          orderIndex: cleaned.length,
+        });
+      } else {
+        cleaned.push({
           type: q.type,
-          prompt: q.prompt.trim(),
-          options: q.type === 'MCQ' ? opts : undefined,
+          prompt,
           solution: q.correctAnswer.trim() || undefined,
           points: 10,
-          orderIndex: 0,
-        };
-      })
-      .filter((q) => q.prompt.length > 0);
+          orderIndex: cleaned.length,
+        });
+      }
+    }
 
     if (cleaned.length === 0) {
       toast.error('Add at least one question with a prompt');
@@ -88,7 +126,7 @@ export function AssessmentBuilder({ onSuccess }: { onSuccess: () => void }) {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          title: title.trim(),
+          title: trimmedTitle,
           description: description.trim() || undefined,
           durationMinutes: duration,
           passingScore,
@@ -97,8 +135,14 @@ export function AssessmentBuilder({ onSuccess }: { onSuccess: () => void }) {
         }),
       });
       if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { title?: string };
-        toast.error(j.title ?? 'Failed to create assessment');
+        const j = (await res.json().catch(() => ({}))) as {
+          title?: string;
+          detail?: { fieldErrors?: Record<string, string[]> };
+        };
+        const firstFieldError = j.detail?.fieldErrors
+          ? Object.values(j.detail.fieldErrors).flat()[0]
+          : undefined;
+        toast.error(firstFieldError ?? j.title ?? 'Failed to create assessment');
         return;
       }
       toast.success('Assessment created');

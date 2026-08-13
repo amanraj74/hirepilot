@@ -57,8 +57,10 @@ describe('offer-letter PDF', () => {
   });
 
   it('delegates to renderToBuffer with the React element', async () => {
-    const renderer = await import('@react-pdf/renderer');
     await generateOfferPdf(SAMPLE_DATA);
+    const renderer = (await import('@react-pdf/renderer')) as unknown as {
+      renderToBuffer: ReturnType<typeof vi.fn>;
+    };
     expect(renderer.renderToBuffer).toHaveBeenCalled();
   });
 

@@ -1084,7 +1084,6 @@ const ASSESSMENTS: AssessmentSeed[] = [
         type: 'DEBUG',
         prompt:
           'The following React component should render a list of names but throws "Objects are not valid as a React child". Identify the bug and fix the code.',
-        language: 'javascript',
         starterCode:
           'function NameList({ people }) {\n  return (\n    <ul>\n      {people.map((p) => <li key={p.id}>{p}</li>)}\n    </ul>\n  );\n}\n',
         solution:
@@ -1128,7 +1127,6 @@ const ASSESSMENTS: AssessmentSeed[] = [
         type: 'DEBUG',
         prompt:
           'A pod is in CrashLoopBackOff. The container log shows "permission denied: /etc/secrets/db.yaml". Name the two most likely causes and how you would verify each.',
-        language: 'text',
         starterCode: 'Describe your debugging steps in plain text (3-5 sentences).\n',
         solution:
           'Likely causes: (1) the secret was mounted with mode 0644 but the binary expects 0600, or (2) the file is owned by root but the container runs as non-root. Verify with `kubectl describe pod` (events) and `kubectl exec` to check actual file mode and ownership.',
@@ -2107,7 +2105,7 @@ async function main() {
     if (!candidate || !job) continue;
 
     const appliedAt = isoDaysAgo(a.daysAgo);
-    const stageHistory = [
+    const stageHistory: Array<{ from: string | null; to: string; by: string; at: string }> = [
       { from: null, to: 'APPLIED', by: candidate.id, at: appliedAt.toISOString() },
     ];
     if (a.stage !== 'APPLIED') {

@@ -29,31 +29,12 @@ function clientIp(req: { headers: Headers; ip?: string | null }): string {
   return req.ip ?? 'unknown';
 }
 
-function checkBucket(
-  key: string,
-  max: number,
-  windowMs: number,
-): { ok: true; remaining: number; resetAt: number } | { ok: false; retryAfterSec: number } {
-  const now = Date.now();
-  const entry = BUCKETS.get(key);
-  if (!entry || entry.resetAt < now) {
-    BUCKETS.set(key, { count: 1, resetAt: now + windowMs });
-    return { ok: true, remaining: max - 1, resetAt: now + windowMs };
-  }
-  if (entry.count >= max) {
-    return { ok: false, retryAfterSec: Math.max(1, Math.ceil((entry.resetAt - now) / 1000)) };
-  }
-  entry.count++;
-  return { ok: true, remaining: max - entry.count, resetAt: entry.resetAt };
-}
-
 // Lazy eviction — drop expired entries when we get / set a bucket. Keeps the
 // map small without needing a background timer in edge runtime.
 function getOrCreateBucket(key: string, windowMs: number): { count: number; resetAt: number } {
   const now = Date.now();
   const existing = BUCKETS.get(key);
   if (existing && existing.resetAt >= now) return existing;
-  // While we're here, sweep a few stale entries. Keeps memory bounded.
   if (BUCKETS.size > 500) {
     for (const [k, v] of BUCKETS) {
       if (v.resetAt < now) BUCKETS.delete(k);

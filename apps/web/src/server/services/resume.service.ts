@@ -56,17 +56,17 @@ export async function processResumeUpload(input: {
 
   const buffer = Buffer.from(await input.file.arrayBuffer());
 
-  // Upload via the storage abstraction. Any failure (storage backend
-  // misconfigured, disk full, Cloudinary rejected, dynamic-import
-  // error) is wrapped in ResumeUploadError so the route handler
-  // surfaces it as a structured JSON 4xx/5xx instead of a 500 HTML
-  // page that the client can't parse.
+  // Upload via the storage abstraction. Any failure (Cloudinary required
+  // on Vercel, Cloudinary API rejected, disk full, dynamic-import error)
+  // is wrapped in ResumeUploadError so the route handler surfaces it as
+  // a structured JSON 4xx/5xx instead of a 500 HTML page that the
+  // client can't parse.
   let storage;
   try {
     storage = await getStorage();
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Storage init failed';
-    throw new ResumeUploadError(500, `Storage init failed: ${msg}`);
+    throw new ResumeUploadError(503, msg);
   }
   let upload;
   try {

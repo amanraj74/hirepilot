@@ -1,10 +1,15 @@
 // Storage abstraction for resume / asset files.
 //
-// Pick the backend at runtime based on env vars:
+// Pick the backend at runtime based on env vars AND runtime:
 // - CLOUDINARY_CLOUD_NAME + CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET set
 //   → upload to Cloudinary, return a stable https URL.
+// - VERCEL=1 (serverless runtime) without Cloudinary → throw a
+//   clear, actionable error telling the operator to set Cloudinary.
+//   The local filesystem is read-only on Vercel (/var/task/...), so
+//   even if we tried, ENOENT would crash the upload.
 // - otherwise
 //   → write to apps/web/public/uploads/ (served at /uploads/*).
+//   This is the dev path.
 //
 // The interface is intentionally tiny so the resume service can stay
 // provider-agnostic.
@@ -40,6 +45,22 @@ function isCloudinaryConfigured(): boolean {
   );
 }
 
+function isVercelRuntime(): boolean {
+  return Boolean(process.env.VERCEL);
+}
+
+class CloudinaryRequiredError extends Error {
+  constructor() {
+    super(
+      'Cloudinary is required on Vercel — set CLOUDINARY_CLOUD_NAME, ' +
+        'CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your Vercel ' +
+        'environment variables. The local filesystem is read-only in ' +
+        'the serverless runtime.',
+    );
+    this.name = 'CloudinaryRequiredError';
+  }
+}
+
 let cachedProvider: StorageProvider | null = null;
 
 export async function getStorage(): Promise<StorageProvider> {
@@ -48,6 +69,11 @@ export async function getStorage(): Promise<StorageProvider> {
     const mod = await import('./cloudinary');
     cachedProvider = mod.cloudinaryProvider;
     console.warn('[storage] using Cloudinary');
+  } else if (isVercelRuntime()) {
+    // Don't even bother importing the local provider — it can't work on
+    // Vercel. Throw an actionable error so the resume service surfaces
+    // it as a 502 with a clear message.
+    throw new CloudinaryRequiredError();
   } else {
     const mod = await import('./local');
     cachedProvider = mod.localProvider;

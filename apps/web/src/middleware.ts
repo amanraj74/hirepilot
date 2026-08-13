@@ -1,21 +1,22 @@
 // Edge middleware — runs before any page render. Protects authenticated routes
-// and applies a simple in-memory rate-limit bucket to auth + candidate API
-// routes.
+// and applies a simple in-memory rate-limit bucket to candidate API routes
+// (auth endpoints are excluded because NextAuth polls them constantly).
 //
 // Public routes: /, /login, /signup, /forgot-password, /reset-password,
 // /verify-email, /jobs, /jobs/[id], /api/auth/*, /api/health, /_next/*.
 //
 // Rate-limit caveats: this is a best-effort in-memory bucket. On Vercel the
 // edge runtime is stateless, so a cold instance starts with an empty bucket —
-// for hard guarantees wire Upstash Redis or Vercel KV. This is the "first
-// pass" called out in the TODO and is good enough to deter casual abuse.
+// for hard guarantees wire Upstash Redis or Vercel KV.
 
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
 const BUCKETS = new Map<string, { count: number; resetAt: number }>();
 
-const AUTH_PATHS = ['/api/auth/'];
+// Only rate-limit /api/candidate/* — NextAuth handles its own auth flood
+// control, and throttling /api/auth/* at 5 req/min breaks the login flow
+// because the client polls /api/auth/session on every render.
 const CANDIDATE_PATHS = ['/api/candidate/'];
 
 function clientIp(req: { headers: Headers; ip?: string | null }): string {
@@ -46,10 +47,7 @@ function getOrCreateBucket(key: string, windowMs: number): { count: number; rese
 }
 
 function isRateLimitedPath(pathname: string): boolean {
-  return (
-    AUTH_PATHS.some((p) => pathname.startsWith(p)) ||
-    CANDIDATE_PATHS.some((p) => pathname.startsWith(p))
-  );
+  return CANDIDATE_PATHS.some((p) => pathname.startsWith(p));
 }
 
 export default withAuth(
@@ -57,7 +55,7 @@ export default withAuth(
     const { pathname } = req.nextUrl;
     const token = req.nextauth.token;
 
-    // Rate-limit auth + candidate API endpoints (5 requests / 60 s / IP).
+    // Rate-limit candidate API endpoints (5 requests / 60 s / IP).
     if (isRateLimitedPath(pathname)) {
       const ip = clientIp(req);
       const key = `rl:${pathname}:${ip}`;

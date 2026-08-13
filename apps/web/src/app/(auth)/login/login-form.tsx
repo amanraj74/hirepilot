@@ -1,18 +1,5 @@
 'use client';
 
-// Login form. Credentials POST directly to NextAuth's
-// /api/auth/callback/credentials endpoint (which has been working
-// since day one). The Google button is a separate <form> that posts
-// to a server action which calls signIn('google', { redirectTo }).
-//
-// Note on 2FA: the 2FA login-integration branch (custom loginAction
-// that detects 2FA and routes to /verify-otp before signIn) is on the
-// roadmap but the nextAuth v4 form-post path doesn't have a clean way
-// to insert a 2FA step in the middle. Until the Auth.js v5 upgrade,
-// 2FA setup is fully working in /settings/security but the
-// login-integration is partial. Users with 2FA enabled currently need
-// to disable 2FA temporarily to sign in.
-
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
@@ -45,8 +32,24 @@ export function LoginForm() {
   const urlError = sp.get('error');
   const callbackUrl = sp.get('callbackUrl') ?? '/dashboard';
 
+  const [csrfToken, setCsrfToken] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch the CSRF token on mount. NextAuth requires it on every
+  // credentials POST — without it the callback returns Configuration
+  // error and the form silently fails.
+  useEffect(() => {
+    fetch('/api/auth/csrf')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.csrfToken) setCsrfToken(data.csrfToken);
+      })
+      .catch(() => {
+        // CSRF fetch failed — surface this so the user knows the
+        // server isn't responding correctly.
+      });
+  }, []);
 
   useEffect(() => {
     if (urlError) {
@@ -60,8 +63,9 @@ export function LoginForm() {
         <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
         <CardDescription>Sign in to your HirePilot workspace.</CardDescription>
       </CardHeader>
+
       <form action="/api/auth/callback/credentials" method="POST" noValidate>
-        <input type="hidden" name="csrfToken" value="" />
+        <input type="hidden" name="csrfToken" value={csrfToken} />
         <input type="hidden" name="callbackUrl" value={callbackUrl} />
         <CardContent className="space-y-4">
           {registered && (
@@ -122,8 +126,8 @@ export function LoginForm() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full">
-            Sign in
+          <Button type="submit" className="w-full" disabled={!csrfToken}>
+            {!csrfToken ? 'Loading…' : 'Sign in'}
           </Button>
 
           <div className="relative w-full">
@@ -135,18 +139,7 @@ export function LoginForm() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              // The Google flow is handled by the server action; this
-              // is a button that triggers a hidden form submit. Keeping
-              // it as a real <button> inside the credentials <form> would
-              // nest forms (invalid HTML) so we use a sibling form
-              // below.
-            }}
-            className="hidden"
-            aria-hidden
-          />
+          <button type="button" disabled className="hidden" aria-hidden />
         </CardFooter>
       </form>
 

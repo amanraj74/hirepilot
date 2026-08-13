@@ -5,7 +5,6 @@
 // React message body is rendered to HTML and sent through Resend's SDK.
 
 import type { ReactElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 
 export type EmailMessage = {
   to: string;
@@ -13,10 +12,12 @@ export type EmailMessage = {
   react: ReactElement;
 };
 
-function renderToHtml(element: ReactElement): string {
-  // Wrap in a full document so Resend doesn't require a separate text part.
-  // renderToStaticMarkup is fine for email bodies — no client components or
-  // hydration needed.
+async function renderToHtml(element: ReactElement): Promise<string> {
+  // Dynamic import — react-dom/server is a Node-only API and this file is
+  // reachable from client-callable server actions. Loading it lazily keeps
+  // Next.js's server-only boundary happy and avoids pulling it into client
+  // bundles.
+  const { renderToStaticMarkup } = await import('react-dom/server');
   const body = renderToStaticMarkup(element);
   return `<!doctype html><html><head><meta charset="utf-8" /></head><body>${body}</body></html>`;
 }
@@ -41,7 +42,7 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
     }
     const { Resend } = await import('resend');
     const resend = new Resend(apiKey);
-    const html = renderToHtml(message.react);
+    const html = await renderToHtml(message.react);
     const { error } = await resend.emails.send({
       from: process.env.EMAIL_FROM ?? 'HirePilot <noreply@hirepilot.local>',
       to: message.to,

@@ -354,7 +354,6 @@ model Job {
   postedBy              User                   @relation("JobPostedBy", fields: [postedById], references: [id])
   applications          Application[]
   resumeAnalyses        ResumeAnalysis[]
-  assessmentAssignments AssessmentAssignment[]
 
   @@index([companyId, status])
   @@index([status, deadline])
@@ -523,7 +522,6 @@ model Assessment {
 
   questions   AssessmentQuestion[]
   attempts    AssessmentAttempt[]
-  assignments AssessmentAssignment[]
 
   createdBy User @relation("AssessmentCreator", fields: [createdById], references: [id])
 
@@ -557,6 +555,7 @@ model AssessmentAttempt {
   assessmentId   String
   applicationId  String?
   candidateId    String
+  expiresAt      DateTime?
   answers        Json? // [{ questionId, answer, isCorrect, pointsAwarded }]
   score          Int?
   maxScore       Int?
@@ -567,30 +566,17 @@ model AssessmentAttempt {
   submittedAt    DateTime?
   gradedAt       DateTime?
 
-  assessment  Assessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  assessment Assessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
   application Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
   candidate   User         @relation(fields: [candidateId], references: [id], onDelete: Cascade)
 
-  @@index([assessmentId, candidateId])
+  @@unique([assessmentId, candidateId])
   @@index([applicationId])
   @@index([candidateId])
 }
 
-model AssessmentAssignment {
-  id           String    @id @default(cuid())
-  assessmentId String
-  jobId        String
-  assignedAt   DateTime  @default(now())
-  dueAt        DateTime?
-  sentEmailAt  DateTime?
-  createdAt    DateTime  @default(now())
-
-  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  job        Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
-
-  @@unique([assessmentId, jobId])
-  @@index([jobId])
-}
+// Removed AssessmentAssignment. AssessmentAttempt already has assessmentId,
+// applicationId, candidateId — that's sufficient for the assignment pattern.
 
 // =============================================================================
 // OFFERS

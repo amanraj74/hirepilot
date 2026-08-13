@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Award } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { prisma } from '@/server/db';
 
 export async function InterviewSuccessWidget() {

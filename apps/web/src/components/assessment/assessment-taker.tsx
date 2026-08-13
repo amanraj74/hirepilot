@@ -6,8 +6,8 @@ import { Clock, AlertTriangle, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { CodeEditor } from './code-editor';
 
 type Question = {
   id: string;
@@ -184,12 +184,12 @@ export function AssessmentTaker({
                   </div>
                 )}
                 {q.type !== 'MCQ' && (
-                  <Textarea
-                    placeholder={q.starterCode ?? `Type your ${q.type.toLowerCase()} answer here…`}
-                    rows={8}
+                  <CodeEditor
+                    questionType={q.type}
+                    language={q.language}
                     value={answers[q.id] ?? ''}
-                    onChange={(e) => setAnswers((p) => ({ ...p, [q.id]: e.target.value }))}
-                    className="font-mono text-xs"
+                    starterCode={q.starterCode}
+                    onChange={(next) => setAnswers((p) => ({ ...p, [q.id]: next }))}
                   />
                 )}
               </CardContent>

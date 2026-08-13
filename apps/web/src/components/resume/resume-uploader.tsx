@@ -41,9 +41,19 @@ export function ResumeUploader({
     startTransition(async () => {
       try {
         const res = await fetch('/api/me/resume', { method: 'POST', body: fd });
-        const json: ApiResult = await res.json();
+        // Try to parse JSON; if the server returned HTML (e.g. an
+        // Nginx 502 or Vercel edge error page), the response isn't
+        // JSON and res.json() throws. Catch that specifically and
+        // surface a useful message.
+        let json: ApiResult & { title?: string };
+        try {
+          json = (await res.json()) as typeof json;
+        } catch {
+          toast.error(`Upload failed: server returned ${res.status} ${res.statusText} (non-JSON)`);
+          return;
+        }
         if (!res.ok) {
-          const title = (json as { title?: string }).title ?? 'Upload failed';
+          const title = json.title ?? `Upload failed (${res.status})`;
           toast.error(title);
           return;
         }
@@ -51,8 +61,9 @@ export function ResumeUploader({
           toast.success(`Resume parsed: ${json.data.skillCount} skills extracted`);
           router.refresh();
         }
-      } catch {
-        toast.error('Network error');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        toast.error(`Network error: ${msg}`);
       }
     });
   }

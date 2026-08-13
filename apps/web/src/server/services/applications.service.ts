@@ -316,5 +316,19 @@ export async function moveApplicationToStage(
     return newApp;
   });
 
+  // Publish a real-time event to the SSE bus so the recruiter's
+  // Kanban board refreshes instantly. companyId may be null for
+  // legacy applications — fall back to "__none__" so the event still
+  // fires for any subscribed listener.
+  try {
+    const { pipelineBus } = await import('@/app/api/recruiter/pipeline/stream/bus');
+    pipelineBus.publish(app.job.companyId ?? '__none__', {
+      type: 'stage',
+      data: { id: applicationId, stage: toStage, from: fromStage },
+    });
+  } catch {
+    // Bus is best-effort; failure here must not break the API.
+  }
+
   return updated;
 }

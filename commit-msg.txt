@@ -1,0 +1,37 @@
+fix(resume-upload): surface real errors instead of "Network error"
+
+User reported "Network error" toast on resume upload. That toast
+fires from the catch block in resume-uploader.tsx, which triggers
+when (a) fetch() itself rejects (true network failure) OR (b)
+res.json() throws because the response body isn't JSON. Case (b)
+is what was happening: the route was 500ing out of dev-mode HTML
+error pages instead of structured JSON.
+
+Three fixes:
+
+1. apps/web/src/app/api/me/resume/route.ts
+   Wrap the whole POST body in try/catch. Any error that isn't a
+   ResumeUploadError is now caught, logged server-side, and returned
+   as a structured 500 JSON with a real `title` field. So now if the
+   storage or parser throws anything, the client always gets a JSON
+   body it can parse and render as a toast.
+
+2. apps/web/src/server/services/resume.service.ts
+   Wrap `getStorage()` itself in a try/catch so a storage-init
+   failure (e.g. dynamic import error, missing Cloudinary env) is
+   turned into a ResumeUploadError(500) rather than escaping the
+   service.
+
+3. apps/web/src/server/storage/local.ts
+   Resolve the public uploads dir at call time (not module load)
+   by walking up cwd until a 'public' directory is found. Robust
+   against Vercel / monorepo cwd variations. Previously the path
+   was frozen at module-load and could point to the wrong dir on
+   Vercel's runtime.
+
+4. apps/web/src/components/resume/resume-uploader.tsx
+   The error toast now shows the actual server-side `title` (e.g.
+   "Upload failed: bad XRef entry") or the network error message,
+   instead of the unhelpful "Network error".
+
+Build green. Typecheck clean."

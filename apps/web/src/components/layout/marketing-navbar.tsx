@@ -41,7 +41,7 @@ export function MarketingNavbar() {
             <Link href="/login">Sign in</Link>
           </Button>
           <Button asChild size="sm" className="hidden sm:inline-flex">
-            <Link href="/signup">Get started</Link>
+            <Link href="/signup">Sign up</Link>
           </Button>
 
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -78,7 +78,7 @@ export function MarketingNavbar() {
                   </Button>
                   <Button asChild>
                     <Link href="/signup" onClick={() => setMobileOpen(false)}>
-                      Get started
+                      Sign up
                     </Link>
                   </Button>
                 </div>

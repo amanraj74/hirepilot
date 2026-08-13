@@ -1,12 +1,13 @@
 // Resume parser — orchestrates PDF/DOCX → raw text → sections → fields → skills.
 // Deterministic engineering — no LLM calls.
 //
-// For image-based PDFs (scanned, no text layer), pdf-parse returns
-// empty text. We fall back to Tesseract OCR via the `tesseract.js`
-// Node binding so we can still extract skill / experience / education
-// from a scan. Tesseract.js 5.x supports PDF input directly via
-// pdfjs + its own image conversion — no separate `canvas` dep
-// required (which we couldn't install on this Windows build env).
+// OCR fallback: tesseract.js 5.x supports PDF input directly. We try
+// it when pdf-parse returns <21 chars of text. If OCR itself fails
+// (e.g. on serverless runtimes where the worker can't initialize,
+// or for corrupted PDFs), we degrade gracefully — the upload
+// still succeeds with whatever fields we managed to extract from
+// the partial text, and the route reports `usedOcr: false` so the
+// UI can surface a clear "your PDF may be image-based" toast.
 
 import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 import mammoth from 'mammoth';
@@ -41,19 +42,26 @@ export type ParsedResume = {
 
 // ---------------------------------------------------------------------------
 
-// Lazy-loaded Tesseract worker. tesseract.js accepts PDF input
-// directly via worker.recognize(buffer) — pdfjs is bundled inside
-// the tesseract.js package so we don't need a separate canvas dep.
+// Lazy-loaded Tesseract worker. The worker creation is slow (downloads
+// ~30MB of traineddata on first run) so we cache the promise. If
+// the worker fails to init (e.g. on serverless where the binary path
+// is not writable), ocrPdf() returns '' and the upload still
+// completes — we just won't extract skills from image PDFs.
 let _ocrWorker: Promise<unknown> | null = null;
 
 async function getOcrWorker(): Promise<unknown> {
   if (!_ocrWorker) {
     _ocrWorker = (async () => {
-      const tessMod = await import('tesseract.js');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tess: any = (tessMod as any).default ?? tessMod;
-      const worker = await tess.createWorker('eng');
-      return worker;
+      try {
+        const tessMod = await import('tesseract.js');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tess: any = (tessMod as any).default ?? tessMod;
+        const worker = await tess.createWorker('eng');
+        return worker;
+      } catch (err) {
+        console.warn('[resume-parser] OCR worker init failed (likely serverless):', err);
+        return null;
+      }
     })();
   }
   return _ocrWorker;
@@ -61,9 +69,10 @@ async function getOcrWorker(): Promise<unknown> {
 
 async function ocrPdf(buffer: Buffer): Promise<string> {
   try {
-    const worker = (await getOcrWorker()) as {
+    const worker = (await getOcrWorker()) as null | {
       recognize: (img: Buffer) => Promise<{ data: { text: string } }>;
     };
+    if (!worker) return '';
     const { data } = await worker.recognize(buffer);
     return data.text || '';
   } catch (err) {

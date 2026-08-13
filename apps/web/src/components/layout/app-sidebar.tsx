@@ -23,11 +23,13 @@ const NAV_BY_ROLE: Record<Role, { href: string; label: string; icon: React.Eleme
     { href: '/recruiter/jobs/new', label: 'Post a job', icon: Briefcase },
     { href: '/recruiter/jobs', label: 'My jobs', icon: Briefcase },
     { href: '/recruiter/pipeline', label: 'Pipeline', icon: KanbanSquare },
+    { href: '/recruiter/assessments', label: 'Assessments', icon: KanbanSquare },
     { href: '/companies', label: 'Company', icon: Building2 },
   ],
   HIRING_MANAGER: [
     { href: '/hiring-manager/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/hiring-manager/shortlist', label: 'Shortlist', icon: KanbanSquare },
+    { href: '/recruiter/assessments', label: 'Assessments', icon: KanbanSquare },
   ],
   INTERVIEWER: [
     { href: '/interviewer/dashboard', label: 'Dashboard', icon: BarChart3 },

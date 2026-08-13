@@ -88,6 +88,7 @@ export async function getAssessmentForRecruiter(assessmentId: string, ctx: Recru
     where: { id: assessmentId },
     include: {
       questions: { orderBy: { orderIndex: 'asc' } },
+      _count: { select: { questions: true } },
       attempts: {
         orderBy: { submittedAt: 'desc' },
         take: 50,

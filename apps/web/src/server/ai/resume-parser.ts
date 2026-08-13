@@ -67,9 +67,16 @@ export function parseResumeText(rawText: string): Omit<ParsedResume, 'rawText'> 
 
   const educationText = byName.get('education') ?? '';
   const experienceText = byName.get('experience') ?? '';
-  const skillsText = [byName.get('skills') ?? '', byName.get('summary') ?? '', experienceText].join(
-    '\n',
-  );
+  // Search for skills in the WHOLE resume — many real-world resumes
+  // don't have a "Skills" section header. We still give the SKILLS
+  // section (when present) extra weight via double-counting in the
+  // search text below.
+  const skillsSearchText = [
+    byName.get('skills') ?? '',
+    byName.get('summary') ?? '',
+    experienceText,
+    rawText, // full-text fallback so skills mentioned anywhere match.
+  ].join('\n');
 
   return {
     sections,
@@ -83,7 +90,7 @@ export function parseResumeText(rawText: string): Omit<ParsedResume, 'rawText'> 
       yearsExperience: estimateYearsExperience(experienceText),
       degreeLevel: detectDegreeLevel(educationText),
     },
-    skills: extractSkills(skillsText),
+    skills: extractSkills(skillsSearchText),
   };
 }
 

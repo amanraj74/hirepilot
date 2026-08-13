@@ -1,5 +1,12 @@
-// Skill extraction — fuzzy-matches resume text against the curated taxonomy.
-// Uses Fuse.js for typo-tolerant matching. Drops anything below threshold.
+// Skill extraction — fuzzy-matches resume text against the curated
+// taxonomy. Uses Fuse.js for typo-tolerant matching.
+//
+// Tuned for real-world resumes:
+// - threshold raised to 0.5 (was 0.4) so realistic resumes with
+//   spacing / casing / minor typos still match.
+// - minMatchLength of 3 chars so we don't false-positive on
+//   common English words like "go" matching the language entry.
+// - max matches capped at 40 to keep the profile UI snappy.
 
 import Fuse from 'fuse.js';
 import taxonomy from '@/data/skill-taxonomy.json';
@@ -18,7 +25,9 @@ export type SkillMatch = {
   matchedAlias: string;
 };
 
-const FUSE_THRESHOLD = 0.4; // 0 = perfect, 1 = horrible. Tune as needed.
+const FUSE_THRESHOLD = 0.5; // 0 = perfect, 1 = horrible.
+const MIN_SKILL_NAME_LENGTH = 3;
+const MAX_MATCHES = 40;
 
 let _fuse: Fuse<SkillEntry> | null = null;
 
@@ -37,6 +46,7 @@ function getFuse(): Fuse<SkillEntry> {
     ],
     threshold: FUSE_THRESHOLD,
     ignoreLocation: true,
+    minMatchCharLength: MIN_SKILL_NAME_LENGTH,
     includeScore: true,
     useExtendedSearch: false,
   });
@@ -56,13 +66,15 @@ export function extractSkills(text: string): SkillMatch[] {
     if (r.score === undefined || r.score > FUSE_THRESHOLD) continue;
     const key = r.item.name.toLowerCase();
     if (seen.has(key)) continue;
+    if (r.item.name.length < MIN_SKILL_NAME_LENGTH) continue;
     seen.add(key);
     matches.push({
       name: r.item.name,
       category: r.item.category,
       weight: r.item.weight,
-      matchedAlias: '', // Fuse.js 'includeMatches' would give per-result
+      matchedAlias: '',
     });
+    if (matches.length >= MAX_MATCHES) break;
   }
   return matches;
 }

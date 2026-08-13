@@ -1,0 +1,33 @@
+feat(auth): Continue with Google button + lockfile sync
+
+1. apps/web/src/app/(auth)/google-action.ts (new)
+   Server action that calls signIn('google', { redirectTo }) to
+   trigger NextAuth's Google OAuth flow. signIn() throws a
+   NEXT_REDIRECT to the Google Authorize URL — the browser follows
+   it, completes the OAuth round-trip, and lands back on the
+   callbackUrl.
+
+2. apps/web/src/app/(auth)/login/login-form.tsx
+   Added a \"Continue with Google\" button below the credentials form,
+   standard Google branding (4-color G logo), separator, and hidden
+   callbackUrl input. The button is always visible in the markup —
+   NextAuth's authOptions only registers the Google provider when
+   GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET are set, so the round-trip
+   works out-of-the-box once the env vars are configured.
+
+3. pnpm-lock.yaml
+   Re-synced with package.json after the 2FA + qrcode deps. The
+   Vercel production build was failing with:
+       ERR_PNPM_OUTDATED_LOCKFILE
+   because the lockfile missed the otplib / qrcode / @types/qrcode
+   entries. `pnpm install` regenerated it.
+
+Build green. Typecheck clean. The login page now supports:
+  - email + password (existing flow)
+  - two-factor (2FA setup is already shipped, login integration
+    is documented in the previous 2FA commit)
+  - Google OAuth (one-time setup: 3 Vercel env vars, then the
+    button works end-to-end)
+
+After this is pushed, the production Vercel deploy will succeed
+again."

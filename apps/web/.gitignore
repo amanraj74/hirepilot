@@ -38,3 +38,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# debug files accidentally created during dev
+/commit-msg.txt
+/login*.html
+/homepage.html
+/dev-server-log.txt
+/api-test-*.json
+/cookies-*.txt
